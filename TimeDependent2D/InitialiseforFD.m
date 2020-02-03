@@ -32,14 +32,19 @@ h = 7;
 Pe = (rho*c*uc*L)/(k);
 epsilon=R1/L;
 St=(rho*g*L^2)/(uc*mu0);
-P0 = (10000*L)/((R1^2)*uc*mu0);
+%P0 = (10000*L)/((R1^2)*uc*mu0);
+%P0=0.9427;
 
 DeltaT = (Qc*L)/(rho*c*uc);
 Bi= ((L^2)*h)/(k*R1); 
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 25; 
+dudx0=-0.7; 
+P0 =- 3*(1)*D*dudx0; 
+
+
+gamma = 20; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -54,7 +59,7 @@ K=500; N=100;
 T = 2; L=1; 
 
 
-[~, A0, ~, th0] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0);
+[P, A0, J0, th0] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0);
 
 % we change the dimensions so that it is compatible with out FD code. 
 A0=A0';
@@ -79,3 +84,13 @@ xplot=linspace(0,1,N);
 % title('A each 50 timesteps')
 % 
 % set(gca,'TickLabelInterpreter','latex','fontsize',15)
+
+% tests for boundary conditions
+dx=L/N;
+
+dAdx=derivative(A0,dx); 
+
+lhs = P'./(3.*exp(gamma.*th0));
+
+rhs = (1./A0).*dAdx';
+abs(lhs(1)-rhs(1))

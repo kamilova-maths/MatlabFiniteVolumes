@@ -1,4 +1,4 @@
-function [ th, A, u, x, t ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N )
+function [ th, A, u, x, t ] = TimeDependentFDfull_v3( th0, A0, D, gamma, dudx0, Pe, St, Bi, tha, T, L, K, N )
 
 
 % initialisation
@@ -25,6 +25,7 @@ Q = 1;
  q = Q*(x>x1).*(x<x2);    % heat source  % CHANGE ME BACK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 %q = zeros(N,1);
 
+
 % laplacian for theta
 Dx2 = spdiags( ones(N,1).*[ 1, -2, 1 ]/dx^2, [-1,0,1], N, N );
 Dx2(N,N-1) = 2/dx^2;
@@ -32,16 +33,24 @@ Dx2(N,N-1) = 2/dx^2;
 
 % solve for u0
 
-% temp = 3*mu([0;0;th0]);     % add ghost node to th
-% tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-% A0  = [ D; A0  ];           % add ghost node to A
-A0   = ones(N+1,1);
-tiph = ones(N+1,1);
+temp = 3*mu([0;0;th0]);     % add ghost node to th
+tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
+A0  = [ D; A0  ];           % add ghost node to A
+% A0   = ones(N+1,1);
+% tiph = ones(N+1,1);
+
+
+
+
+
 
 Dx2u = spdiags( [ A0(2:end).*tiph(2:end), -(A0(1:end-1).*tiph(1:end-1)+A0(2:end).*tiph(2:end)), A0(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], N, N );
 Dx2u(1,2) = Dx2u(1,2) + A0(1).*tiph(1) / dx^2;              % include effect from Neumann BC
 fu   = - St*( A0(1:end-1) + A0(2:end) )/ 2;
-fu(1)  = fu(1)   - 2*P0/(3*D*dx); % include derivative (again, Neumann BC)
+%fu(1)  = fu(1)   - 2*P0/(3*D*dx); % include derivative (again, Neumann BC)
+fu(1)  = fu(1)   + 2*dudx0/(dx); % include derivative (again, Neumann BC)
+
+%fu(1) =  fu(1) - 2*(1/A0(1)*(A0(3)-A0(2))/(dx)); 
 fu(end)= fu(end) - 1   * A0(end)* tiph(end)/dx^2;
 
 u(:,1) = Dx2u\fu;
@@ -95,7 +104,11 @@ for i=2:K
     Dx2u = spdiags( [ A0(2:end).*tiph(2:end), -(A0(1:end-1).*tiph(1:end-1)+A0(2:end).*tiph(2:end)), A0(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], N, N );
     Dx2u(1,2) = Dx2u(1,2) + A0(1).*tiph(1) / dx^2;              % include effect from Neumann BC
     fu   = - St*( A0(1:end-1) + A0(2:end) )/ 2;
-    fu(1)  = fu(1)   - 2*P0/(3*D*dx); % include derivative (again, Neumann BC)
+    %fu(1)  = fu(1)   - 2*P0/(3*D*dx); % include derivative (again, Neumann BC)
+    %fu(1) = fu(1)-2*(1/A0(1)*(A0(3)-A0(2))/(dx));
+    fu(1)  = fu(1)   + 2*dudx0/(dx); % include derivative (again, Neumann BC)
+
+    
     fu(end)= fu(end) - 1   * A0(end)* tiph(end)/dx^2;
 
     u(:,i) = Dx2u\fu;
@@ -128,24 +141,28 @@ u  = [ u ; ...
 x  = [0;x];
    
 % to plot:
+close all
+
 subplot(1,3,1)
 surf(t,x,th);
-xlabel('t')
-ylabel('x')
-title('Theta')
+xlabel('$t$')
+ylabel('$x$')
+title('$\theta$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 subplot(1,3,2)
 surf(t,x,A);
-xlabel('t')
-ylabel('x')
-title('Area')
+xlabel('$t$')
+ylabel('$x$')
+title('$A$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 subplot(1,3,3)
 surf(t,x,u);
-xlabel('t')
-ylabel('x')
-title('Velocity')
-
+xlabel('$t$')
+ylabel('$x$')
+title('$u$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 end
 

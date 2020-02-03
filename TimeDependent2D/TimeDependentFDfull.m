@@ -108,24 +108,28 @@ u  = [ 1/D*ones(1,K); ...
 x  = [0;x];
    
 % to plot:
+close all
+
 subplot(1,3,1)
 surf(t,x,th);
-xlabel('t')
-ylabel('x')
-title('Theta')
+xlabel('$t$')
+ylabel('$x$')
+title('$\theta$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 subplot(1,3,2)
 surf(t,x,A);
-xlabel('t')
-ylabel('x')
-title('Area')
+xlabel('$t$')
+ylabel('$x$')
+title('$A$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 subplot(1,3,3)
 surf(t,x,u);
-xlabel('t')
-ylabel('x')
-title('Velocity')
-
+xlabel('$t$')
+ylabel('$x$')
+title('$u$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 end
 
