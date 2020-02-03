@@ -13,11 +13,6 @@ close all;
 % Indicator for plotting. 0- no plots, 1- plots.
 plt=0; 
 
-%Defining non-dimensional parameters
-% Peclet number
-
-
-
 Tin = 0;
 Pin = 0;
 
