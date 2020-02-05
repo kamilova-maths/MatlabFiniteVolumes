@@ -89,6 +89,13 @@ X = [x,fliplr(x)];
 y1 = p.x1*ones(size(x)); 
 y2 = p.x2*ones(size(x));
 Y = [y1, fliplr(y2)]; 
+
+% laplacian for theta
+Dx2 = spdiags( ones(N,1).*[ 1, -2, 1 ]/dx^2, [-1,0,1], N, N );
+Dx2(N,N-1) = 2/dx^2;
+
+
+% solve for u0
 fill(X,Y,[204/255, 255/255, 204/255], 'LineStyle','none','HandleVisibility','off');
 hold on 
 plot(sol.y(1,:),sol.x); drawnow; shg;

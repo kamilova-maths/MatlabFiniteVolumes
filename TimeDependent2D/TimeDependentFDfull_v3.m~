@@ -114,7 +114,6 @@ for i=2:K
     %% Solve for u at next time step (laplacian)
     %temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
     tiph = 3*mu( 0.5* ([0;0;th(1:end-1,i)] + [0;th(:,i)]) );  
-    
     %tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
     A0  = [ D; A(:,i)  ];           % add ghost node to A
 

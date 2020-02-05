@@ -32,7 +32,7 @@ h = 7;
 Pe = (rho*c*uc*L)/(k);
 epsilon=R1/L;
 St=(rho*g*L^2)/(uc*mu0);
-%P0 = (10000*L)/((R1^2)*uc*mu0);
+P0 = (10000*L)/((R1^2)*uc*mu0);
 %P0=0.9427;
 
 DeltaT = (Qc*L)/(rho*c*uc);
@@ -40,11 +40,12 @@ Bi= ((L^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-dudx0=-0.7; 
-P0 =- 3*(1)*D*dudx0; 
+% dudx0=-0.7; 
+% P0 =- 3*(1)*D*dudx0; 
 
 
-gamma = 20; 
+%gamma = 5; 
+gamma = 0; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
