@@ -47,7 +47,7 @@ gamma = 0;
 % HAVE. 
 %c0 = [-6.5,-4]; 
 
-c0 = [-6.5,-5];
+c0 = [0.1,0.1];
 
 c = fsolve(@(c) AnalyticalSolutionConstantViscosity(c,St,P0,D),c0); 
 
@@ -68,9 +68,9 @@ Aan = @(x) (eta.*c(1)./St).*(-1 +tanh(0.5.* (-sqrt(2).*x.*eta.*sqrt(c(1))-sqrt(e
 F1 = @(c1,c2) sqrt(2).* sqrt (c1*(tanh(0.5.*sqrt((1/3).*c1).*c2)).^2)-P0; 
 F2 = @(c1,c2) St.*D+(1/3).*c1.*(sech(0.5.*(sqrt((1/3).*c1).*c2))).^2;
 
-fimplicit(F1,[-10 0 -10 10])
+fimplicit(F1,[-10 0 ])
 hold on 
-fimplicit(F2,[-10 0 -10 10])
+fimplicit(F2)
 
 % Now we compute the Steady state with our original steady state code, for
 % constant viscosity
