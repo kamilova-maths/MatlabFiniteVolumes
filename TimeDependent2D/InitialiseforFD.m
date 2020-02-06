@@ -44,7 +44,7 @@ dudx0=-0.7;
 P0 =- 3*(1)*D*dudx0; 
 
 
-gamma = 20; 
+gamma = 0; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -54,9 +54,9 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-K=500; N=100;
+K=2500; N=100;
 % end of the domain
-T = 2; L=1; 
+T = 5; L=1; 
 
 
 [P, A0, J0, th0] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0);

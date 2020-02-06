@@ -60,18 +60,19 @@ u(:,1) = Dx2u\fu;
 
 for i=2:K
     %% Solve for A at next time step (explicit, hyperbolic)
-    if sum( abs(u(:,i-1)) > dx/dt )
+    if sum( abs(u(:,i)) > dx/dt )
         err('CFL condition broken!')
     end
     
 %     tmpU = [1/D; u(:,i-1)];
     tmpU = [ u(:,i-1); 1 ];
-    tmpA = [D; A(:,i-1);1];
+    tmpA = [2*D-A(1,i-1); A(:,i-1);1];
     FL = tmpA(1:end-1).*tmpU;
     FR = tmpA(2:end  ).*tmpU;
     F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
     F  = ( F(1:end-1) - F(2:end) ) / dx;
     A(:,i) = A(:,i-1) + dt * F;
+    A(1,i) = D;
     
     % possibly correct if A>1 somewhere (open can of worms)
         
