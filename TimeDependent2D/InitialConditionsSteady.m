@@ -1,4 +1,4 @@
-function [Pinterp, Ainterp, Jinterp, Thinterp] = InitialConditionsSteady(n,alpha,Q,x1,x2,eps,St,Ta,Bi,Pe,P0,R0)
+function [Pinterp, Ainterp, Jinterp, Thinterp] = InitialConditionsSteady(n,alpha,Q,x1,x2,eps,St,Ta,Bi,Pe,P0,R0,L)
 % 3 October 2018
 
 % Modified version of Ian Hewitt's original code. Matches transfer of
@@ -24,15 +24,15 @@ Ain = 0.5;
 
 % % initial solve using easy parameters
 
-solinit = bvpinit(linspace(0,1,100),@(x) [Pin; Ain; 0; Tin]);
+solinit = bvpinit(linspace(0,L,100),@(x) [Pin; Ain; 0; Tin]);
 opts = bvpset('RelTol',1e-4,'AbsTol',1e-4);
 sol = bvp4c(@(x,y) odefun(x,y,alpha,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
 
-Pinterp=interp1(sol.x,sol.y(1,:),linspace(0,1,n));
-Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,1,n+1),'spline');
+Pinterp=interp1(sol.x,sol.y(1,:),linspace(0,L,n),'spline');
+Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n+1),'spline');
 Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
-Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,1,n));
-Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,1,n));
+Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,L,n));
+Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n));
 
 
 if plt==1

@@ -51,10 +51,10 @@ eps = 1e-2;
 % problem 
 K=2500; N=100;
 % end of the domain
-T = 5; L=1; 
+T = 5; L=1.5152; 
 
 
-[P, A0, J0, th0] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0);
+[P, A0, J0, th0] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L);
 
 % we change the dimensions so that it is compatible with out FD code. 
 A0=A0';

@@ -45,9 +45,8 @@ gamma = 0;
 
 % THESE ARE THE CHOICES OF CONSTANTS THAT MATCH THE STEADY STATE SOLUTION I
 % HAVE. 
-%c0 = [-6.5,-4]; 
+c0 = [-6.5,-4]; 
 
-c0 = [-6.5,-5];
 
 c = fsolve(@(c) AnalyticalSolutionConstantViscosity(c,St,P0,D),c0); 
 
@@ -77,22 +76,22 @@ fimplicit(F2,[-10 0 -10 10])
 
 % Number of x nodes
 N=100 ; 
+L= 1.4529; 
+[Pnum, Anum, Jnum, Thnum] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L);
 
-[Pnum, Anum, Jnum, Thnum] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0);
+%x = linspace(0,L,N); 
 
-x = linspace(0,1,N); 
-
-figure(1)
-plot(x,Anum)
-hold on 
-plot(x,Aan(x),'--')
-
-
-figure(2)
-
-plot(x,Pnum)
-hold on 
-plot(x,Pan(x),'--')
+% figure(1)
+% plot(x,Anum)
+% hold on 
+% plot(x,Aan(x),'--')
+% 
+% 
+% figure(2)
+% 
+% plot(x,Pnum)
+% hold on 
+% plot(x,Pan(x),'--')
 
 
 
@@ -106,14 +105,10 @@ plot(x,Pan(x),'--')
 
 K=2500; 
 % end of the domain
-T = 1; L=1; 
+T = 1; 
 th0=Thnum';
 A0 = Anum';
 
 
 [ th, A, u, x, t ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N );
-
-% Made the comparison - something is definitely wrong, as the steady state
-% and the solution it matches at the end are not the same. 
-
 
