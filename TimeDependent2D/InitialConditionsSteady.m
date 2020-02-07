@@ -1,4 +1,4 @@
-function [Pinterp, Ainterp, Jinterp, Thinterp] = InitialConditionsSteady(n,alpha,Q,x1,x2,eps,St,Ta,Bi,Pe,P0,R0,L)
+function [Pinterp, Ainterp, Jinterp, Thinterp] = InitialConditionsSteady(n,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe,P0,R0,L,H)
 % 3 October 2018
 
 % Modified version of Ian Hewitt's original code. Matches transfer of
@@ -17,22 +17,24 @@ Tin = 0;
 Pin = 0;
 
 %p.Pin = 0; %produces nicer plots
-Ain = 0.5;
-
-%This is the area of the clamps, taken from Temperature profiles ... 
-
+Ain = 0.2;
 
 % % initial solve using easy parameters
 
 solinit = bvpinit(linspace(0,L,100),@(x) [Pin; Ain; 0; Tin]);
 opts = bvpset('RelTol',1e-4,'AbsTol',1e-4);
-sol = bvp4c(@(x,y) odefun(x,y,alpha,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
+
+if H==1
+    sol = bvp4c(@(x,y) odefun(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
+else
+	sol = bvp4c(@(x,y) odefunNH(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
+end
 
 Pinterp=interp1(sol.x,sol.y(1,:),linspace(0,L,n),'spline');
 Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n+1),'spline');
 Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
 Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,L,n));
-Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n));
+Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n),'spline');
 
 
 if plt==1

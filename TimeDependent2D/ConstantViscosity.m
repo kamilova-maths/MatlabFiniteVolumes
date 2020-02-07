@@ -1,3 +1,9 @@
+
+clc
+
+set(0,'DefaultAxesFontSize',12,'DefaultTextInterpreter','latex');
+
+
 % Data to use 
 
 rho= 1.8*10^3; %Bergstrom ; 
@@ -33,7 +39,7 @@ Q = 1;
 eps = 1e-2;
 
 % In order to set constant viscosity, we set gamma=0. 
-gamma = 0; 
+gamma = 30; 
 
 % We compute the analytical solution. 
 % We solve for the integration constants, with initial guess given by
@@ -45,39 +51,40 @@ gamma = 0;
 
 % THESE ARE THE CHOICES OF CONSTANTS THAT MATCH THE STEADY STATE SOLUTION I
 % HAVE. 
-c0 = [-6.5,-4]; 
+% c0 = [-6.5,-4]; 
+% 
+% 
+% c = fsolve(@(c) AnalyticalSolutionConstantViscosity(c,St,P0,D),c0); 
+% 
+% % Then the analytical solution for P and A is given by these formulas
+% 
+% eta= 1/3; 
+% 
+% Pan = @(x) (1/sqrt(eta)).*( sqrt(2).* sqrt (eta .*c(1) + eta * c(1)* ...
+%     (-1 + tanh( 0.5 * ( -sqrt(2).*x.*eta.*sqrt(c(1)) - sqrt(eta) .*sqrt(c(1)) .*c(2))).^2)));
+% 
+% Aan = @(x) (eta.*c(1)./St).*(-1 +tanh(0.5.* (-sqrt(2).*x.*eta.*sqrt(c(1))-sqrt(eta).*sqrt(c(1)).*c(2) )).^2 );
+% 
+% % Now we attempt to plot what is happening with the constants and why we
+% % have so many different intersections. Is it possible to find a
+% % combination that will give us the steady state produced by the
+% % time-dependent code? Intuition says no. 
+% 
+% F1 = @(c1,c2) sqrt(2).* sqrt (c1*(tanh(0.5.*sqrt((1/3).*c1).*c2)).^2)-P0; 
+% F2 = @(c1,c2) St.*D+(1/3).*c1.*(sech(0.5.*(sqrt((1/3).*c1).*c2))).^2;
 
-
-c = fsolve(@(c) AnalyticalSolutionConstantViscosity(c,St,P0,D),c0); 
-
-% Then the analytical solution for P and A is given by these formulas
-
-eta= 1/3; 
-
-Pan = @(x) (1/sqrt(eta)).*( sqrt(2).* sqrt (eta .*c(1) + eta * c(1)* ...
-    (-1 + tanh( 0.5 * ( -sqrt(2).*x.*eta.*sqrt(c(1)) - sqrt(eta) .*sqrt(c(1)) .*c(2))).^2)));
-
-Aan = @(x) (eta.*c(1)./St).*(-1 +tanh(0.5.* (-sqrt(2).*x.*eta.*sqrt(c(1))-sqrt(eta).*sqrt(c(1)).*c(2) )).^2 );
-
-% Now we attempt to plot what is happening with the constants and why we
-% have so many different intersections. Is it possible to find a
-% combination that will give us the steady state produced by the
-% time-dependent code? Intuition says no. 
-
-F1 = @(c1,c2) sqrt(2).* sqrt (c1*(tanh(0.5.*sqrt((1/3).*c1).*c2)).^2)-P0; 
-F2 = @(c1,c2) St.*D+(1/3).*c1.*(sech(0.5.*(sqrt((1/3).*c1).*c2))).^2;
-
-fimplicit(F1,[-10 0 -10 10])
-hold on 
-fimplicit(F2,[-10 0 -10 10])
+% fimplicit(F1,[-10 0 -10 10])
+% hold on 
+% fimplicit(F2,[-10 0 -10 10])
 
 % Now we compute the Steady state with our original steady state code, for
 % constant viscosity
 
 % Number of x nodes
-N=100 ; 
-L= 1.4529; 
-[Pnum, Anum, Jnum, Thnum] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L);
+N=500 ; 
+L= 1; 
+H = 0; % indicator function for heaviside. H=0 means no heaviside, H=1 means heaviside. 
+[Pnum, Anum, Jnum, Thnum] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H);
 
 %x = linspace(0,L,N); 
 
@@ -106,9 +113,16 @@ L= 1.4529;
 K=2500; 
 % end of the domain
 T = 1; 
+
+% Actual steady state
 th0=Thnum';
 A0 = Anum';
 
+
+% perturbed steady state - nice to have options
+% xfun = linspace(0,L,N);
+% th0= (sin(xfun).*Thnum)';
+% A0=(Anum'); 
 
 [ th, A, u, x, t ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N );
 
