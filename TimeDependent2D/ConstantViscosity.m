@@ -39,7 +39,7 @@ Q = 1;
 eps = 1e-2;
 
 % In order to set constant viscosity, we set gamma=0. 
-gamma = 30; 
+gamma = 0; 
 
 % We compute the analytical solution. 
 % We solve for the integration constants, with initial guess given by

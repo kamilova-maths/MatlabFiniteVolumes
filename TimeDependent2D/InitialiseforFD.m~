@@ -49,7 +49,7 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-K=9000; N=2000;
+K=3000; N=700;
 % end of the domain
 T = 1; L=1 ;
 
@@ -64,13 +64,10 @@ th0=th0';
 xplot=linspace(0,1,N); 
 
 
-[ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, A0(1), gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf );
-return
-A0 = A1(2:end,end);
-% th0(end) = th1(end,end);
-% th0(end-1) = th1(end-1,end); 
+[ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf );
 
-%th0=th1(2:end,end);
+A0 = A1(2:end,end);
+th0 = th1(2:end,end);
 
 [ th2, A2, u2, x2, t2 ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf );
 

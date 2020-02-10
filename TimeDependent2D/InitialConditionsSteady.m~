@@ -22,7 +22,7 @@ Ain = 0.2;
 % % initial solve using easy parameters
 
 solinit = bvpinit(linspace(0,L,100),@(x) [Pin; Ain; 0; Tin]);
-opts = bvpset('RelTol',1e-6,'AbsTol',1e-6);
+opts = bvpset('RelTol',1e-4,'AbsTol',1e-4);
 
 if H==1
     sol = bvp4c(@(x,y) odefun(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
@@ -32,20 +32,11 @@ end
 
 Pinterp=interp1(sol.x,sol.y(1,:),linspace(0,L,n),'spline');
 Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n+1),'spline');
-%Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n),'spline');
-
-% option #1 - taking the values evaluated at the point
- uf=1/Ainterp(end);
-% dudx=derivative(1./Ainterp,1/n);
-% P0out=-3.*Ainterp(1).*dudx(1); 
-Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
-
-
-% option #2 - taking the values evaluated at the cell
-%uf=1/Ainterp(end);
+% option 
+uf=1/Ainterp(end);
 dudx=derivative(1./Ainterp,1/n);
 P0out=-3.*Ainterp(1).*dudx(1); 
-
+Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
 Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,L,n));
 Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n),'spline');
 
