@@ -49,14 +49,17 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-K=9000; N=2000;
+K=4000; N=300;
 % end of the domain
 T = 1; L=1 ;
 
 % We add the heaviside with H=1, and we remove it with H=0. 
-H=0; 
+H=0;
 
-[P, A0, J0, th0,uf,P0out] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H);
+% Plots for steady state - 1 , no plots for steady state - 0
+plt = 0;
+% We try with tha=0
+[P, A0, J0, th0,uf] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
 
 % we change the dimensions so that it is compatible with out FD code. 
 A0=A0';
@@ -65,12 +68,10 @@ xplot=linspace(0,1,N);
 
 
 [ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, A0(1), gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf );
-return
-A0 = A1(2:end,end);
-% th0(end) = th1(end,end);
-% th0(end-1) = th1(end-1,end); 
 
-%th0=th1(2:end,end);
+A0 = A1(2:end,end);
+th0= th1(2:end,end); 
+
 
 [ th2, A2, u2, x2, t2 ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf );
 
@@ -103,5 +104,12 @@ A0 = A1(2:end,end);
 % 
 % lhs = P'./(3.*exp(gamma.*th0));
 % 
-% rhs = (1./A0).*dAdx';
-% abs(lhs(1)-rhs(1));
+% % rhs = (1./A0).*dAdx';
+% % abs(lhs(1)-rhs(1));
+% close all 
+% figure(1)
+% for i=1:5:K
+%    plot(x1,th1(:,i))
+%    hold on
+%    pause
+% end 

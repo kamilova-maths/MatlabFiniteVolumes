@@ -23,6 +23,7 @@ x1 = 5/7;
 x2 = 6.5/7;
 Qvalue = 1;
  Q = Qvalue*(x>x1).*(x<x2);    % heat source  
+ 
 %q = zeros(N,1);
 
 
@@ -65,7 +66,7 @@ u(:,1) = Dx2u\fu;
 for i=2:K
     %% Solve for A at next time step (explicit, hyperbolic)
     if sum( abs(u(:,i-1)) > dx/dt )
-        err('CFL condition broken!')
+        error('CFL condition broken!')
     end
     
     tmpU = [ u(:,i-1); uf ];
@@ -92,7 +93,8 @@ for i=2:K
     % - assemble matrix
     M = speye(N) - dt*( Dx1 + 1/Pe * Dx2 - Z );
     % - assemble rhs
-     fth = (2*Bi/Pe ./sqrt(A(:,i-1))).*tha + Q;  
+     fth = (2*(Bi/Pe) ./sqrt(A(:,i))).*tha + Q;  
+     %fth = (2*Bi/Pe ./sqrt(A(:,i-1))).*tha + Q;  
 
     % - solve
     th(:,i) = M\( th(:,i-1) + dt*fth );
