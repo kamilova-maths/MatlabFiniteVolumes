@@ -1,7 +1,5 @@
 % Define sizes/parameters
 InitialiseforFD; 
-N = N+1; 
-dx = L/(N-1);
 
 % Find steady state
 
@@ -10,6 +8,10 @@ dx = L/(N-1);
 th0 = th2(:,1);
 A0 = A2(:,1);
 u0 = u2(:,1);
+N = length(th0); 
+
+dx = L/(N-1);
+
 
 dudx = derivative(u0,dx)';
 dAdx = derivative(A0,dx)';
@@ -54,4 +56,9 @@ P1 = [speye(N,N),sparse(N,N),sparse(N,N);
   
   figure(2)
   % plot the eigenvalues
- plot(eigs(SS,P1,200,100),'+')
+  
+set(0,'DefaultAxesFontSize',12,'DefaultTextInterpreter','latex');
+plot(eigs(SS,P1,100,50),'o', 'MarkerFaceColor', 'b')
+set(gca,'TickLabelInterpreter','latex','fontsize',15)
+xlabel('Re($\sigma$)')
+ylabel('Im($\sigma$)')
