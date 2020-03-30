@@ -42,6 +42,7 @@ D = (R0^2)/(R1^2);
 gamma = 30; 
 
 
+
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 K=4000; N=100;
@@ -56,6 +57,7 @@ x=linspace(0,L,N);
 Q = Qvalue*(x>x1).*(x<x2);    % heat source  
 eps = 1e-2;
 
+
 % We add the heaviside with H=1, and we remove it with H=0. 
 H=0;
 
@@ -65,6 +67,23 @@ plt = 0;
 [P, A0, J0, th0,uf] = InitialConditionsSteady(N,gamma,Qvalue,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
 
 % we change the dimensions so that it is compatible with out FD code. 
+
+% Calculating the initial conditions as a solution of the steady state
+% problem 
+K=4000; N=100;
+% end of the domain
+T = 1; L=1 ;
+
+% We add the heaviside with H=1, and we remove it with H=0. 
+H=0;
+
+% Plots for steady state - 1 , no plots for steady state - 0
+plt = 0;
+% We try with tha=0
+[P, A0, J0, th0,uf] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+
+% we change the dimensions so that it is compatible with out FD code. 
+x=linspace(0,L,N);
 
 
 A0=A0';
@@ -76,7 +95,6 @@ u0 = (1./A0);
 
 A0 = A1(2:end,end);
 th0= th1(2:end,end); 
-
 
 [ th2, A2, u2, x2, t2 ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf, plt );
 

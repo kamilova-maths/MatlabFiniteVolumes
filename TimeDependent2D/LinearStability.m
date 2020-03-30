@@ -40,7 +40,9 @@ s13 = sparse(N,N);
 s21 = (dudx.*pre1).*Dx1 - spdiags((gamma.*dthdx.*dudx.*pre1), 0,N,N) + spdiags(dudx2.*pre1,0,N,N) + spdiags(St.*ones(N,1),0,N,N);
 s22 = (dAdx.*pre1-gamma.*dthdx.*A0.*pre1).*Dx1 +(A0.*pre1).*Dx2; 
 s23 = spdiags((gamma^2.*A0.*dudx.*dthdx.*pre1),0,N,N)-(gamma.*pre1).*Dx1.*(A0.*dudx)-(gamma.*A0.*dudx.*pre1).*Dx1; 
+
 s31 = (1/Pe).*(dthdx.*pre2).*Dx1+spdiags((pre2.*((1/Pe).*dthdx2-dthdx.*u0 - Bi./(Pe.*sqrt(A0)).*(th0-tha)+Q')),0,N,N); 
+%s31 = (1/Pe).*(dthdx.*pre2).*Dx1+spdiags((pre2.*((1/Pe).*dthdx2-dthdx.*u0 - Bi./(Pe.*sqrt(A0)).*(th0-tha)+Q)),0,N,N); 
 s32 = spdiags((-dthdx.*A0.*pre2),0,N,N);
 s33 = A0./Pe.*pre2.*Dx2+((1/Pe).*dAdx.*pre2-A0.*u0.*pre2).*Dx1-Dx1.*(A0.*u0.*pre2)-spdiags((2*(Bi/Pe).*sqrt(A0).*pre2),0,N,N); 
 

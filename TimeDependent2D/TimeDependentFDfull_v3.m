@@ -137,6 +137,7 @@ A  = [ D*ones(1,K); ...
 %        u           ];
 u  = [ u ; ...
        uf.*ones(1,K)   ];
+
    
 % u = [u; ...
 %      ufinal.*ones(1,K)];
@@ -146,7 +147,9 @@ x  = [0;x];% We add zero at the end
 % to plot:
 close all
 
+
 if plt == 1
+
 subplot(1,3,1)
 surf(t,x,th);
 xlabel('$t$')

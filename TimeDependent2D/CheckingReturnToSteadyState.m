@@ -67,9 +67,9 @@ x=linspace(0,L,N);
 A0=A0';
 th0=th0'; 
 u0 = (1./A0);
+
 plt = 0; 
 [ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, A0(1), gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf, plt);
-
 
 Ast = A1(1:end,end);
 tst = th1(1:end,end);
@@ -77,6 +77,7 @@ ust = u1(1:end,end);
 
 %A0  = A1(2:end,end)+[0; sin(x(1:end-2)');0];
 A0  = A1(2:end,end);
+
 %th0 = th1(2:end,end)+[0; 0.1*exp(-x(1:end-2)');0];
 th0 = th1(2:end,end);
 u0  = u1(2:end,end);
