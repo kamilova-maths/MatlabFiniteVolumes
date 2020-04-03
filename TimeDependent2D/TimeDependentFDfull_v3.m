@@ -51,7 +51,7 @@ Dx2u = spdiags( [ A0(2:end).*tiph(2:end), -(A0(1:end-1).*tiph(1:end-1)+A0(2:end)
 Dx2u(1,2) = Dx2u(1,2) + A0(1).*tiph(1) / dx^2;              % include effect from Neumann BC
 fu   = - St*( A0(1:end-1) + A0(2:end) )/ 2;
 %fu(1)  = fu(1)   - 2*P0/(3*D*dx); % include derivative (again, Neumann BC)
-fu(1) = fu(1) -2*tiph(1)*P0/(3*dx); 
+fu(1) = fu(1) -2*tiph(1)*P0(1)/(3*dx); 
 
 %fu(1) =  fu(1) - 2*(1/A0(1)*(A0(3)-A0(2))/(dx)); 
 %fu(end)= fu(end) - 1   * A0(end)* tiph(end)/dx^2;
@@ -117,8 +117,9 @@ for i=2:K
     Dx2u(1,2) = Dx2u(1,2) + A0(1).*tiph(1) / dx^2;              % include effect from Neumann BC
     fu   = - St*( A0(1:end-1) + A0(2:end) )/ 2;
 
-    fu(1) = fu(1) -2*tiph(1)*P0/(3*dx);  % include derivative (again, Neumann BC)
-   
+    %fu(1) = fu(1) -2*tiph(1)*P0/(3*dx);  % include derivative (again, Neumann BC)
+    fu(1) = fu(1) -2*tiph(1)*P0(i)/(3*dx);  % include derivative (again, Neumann BC)
+    
     fu(end)= fu(end) - uf   * A0(end)* tiph(end)/dx^2;
     u(:,i) = Dx2u\fu;
 
