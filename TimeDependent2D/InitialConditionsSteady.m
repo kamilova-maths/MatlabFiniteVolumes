@@ -1,4 +1,4 @@
-function [Pinterp, Ainterp, Jinterp, Thinterp,uf] = InitialConditionsSteady(n,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe,P0,R0,L,H,plt)
+function [Pinterp, Ainterp, Jinterp, Thinterp,uf] = InitialConditionsSteady(n,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe,P0,R0,L,H,plt,lam)
 % 3 October 2018
 
 % Modified version of Ian Hewitt's original code. Matches transfer of
@@ -26,9 +26,9 @@ solinit = bvpinit(linspace(0,L,100),@(x) [Pin; Ain; 0; Tin]);
 opts = bvpset('RelTol',1e-6,'AbsTol',1e-7);
 
 if H==1
-    sol = bvp5c(@(x,y) odefun(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
+    sol = bvp5c(@(x,y) odefun(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe,lam),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
 else
-	sol = bvp5c(@(x,y) odefunNH(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
+	sol = bvp5c(@(x,y) odefunNH(x,y,gamma,Q,x1,x2,eps,St,Ta,Bi,Pe,lam),@(ya,yb) bcfun(ya,yb,P0,R0,Tin),solinit,opts);
 end
 
 %Pinterp  = sol.y(1,:);

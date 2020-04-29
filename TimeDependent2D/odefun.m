@@ -9,7 +9,7 @@ Q = Q*(x>x1).*(x<x2);    % heat source
 %He = (A<1);                     % Heaviside function
 % He = 1/2*(1+tanh((1-A)/p.eps)); % regularised Heaviside function
 He = max(1-exp(-(1-A)/eps),0);% regularised Heaviside function
-dydx = [ St*A;
+dydx = [ St*A*lam^2;
         (A.*P./(3*mu)).*He;
         Pe*((J./A) - A.*Q) - 2*Bi*A.^(1/2).*(Ta-T);
         J./A

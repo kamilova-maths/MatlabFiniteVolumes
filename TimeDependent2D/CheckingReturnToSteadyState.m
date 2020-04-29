@@ -49,7 +49,7 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-K=4000; N=100;
+N=4000; K=100;
 % end of the domain
 T = 1; L=1 ;
 
@@ -59,10 +59,10 @@ H=0;
 % Plots for steady state - 1 , no plots for steady state - 0
 plt = 0;
 % We try with tha=0
-[P, A0, J0, th0,uf] = InitialConditionsSteady(N,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+[P, A0, J0, th0,uf] = InitialConditionsSteady(K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
 
 % we change the dimensions so that it is compatible with out FD code. 
-x=linspace(0,L,N);
+x=linspace(0,L,K);
 
 A0=A0';
 th0=th0'; 
@@ -88,7 +88,7 @@ return
 
 % for plotting 
 figure; 
-dx=1/N;
+dx=1/K;
 xplot=0:dx:L;
 xplot=xplot';
 

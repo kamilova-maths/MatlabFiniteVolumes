@@ -34,7 +34,7 @@ Bi= ((L^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 0; 
+gamma = 40; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -44,55 +44,42 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=1000; K=300;
+N=4000; K=300;
 % end of the domain
 T = 1; L=1 ;
 
 % We add the heaviside with H=1, and we remove it with H=0. 
 H=0;
-
+lam=1; 
 % Plots for steady state - 1 , no plots for steady state - 0
 plt = 0;
-lam0= 1;  
 % We try with tha=0
-[P, A0, J0, th0, ~] = InitialConditionsSteady(K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt,lam0);
+[P, A0, J0, th0, ~] = InitialConditionsSteady(K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt,lam);
  
 %Initial conditions given by A0, th0
 A0=A0';
 th0=th0'; 
-
 % Obtain initial condition for u
 % viscosity
 %mu = @(th) exp(-gamma*th); % Perhaps discretise this as well, but put a pin in that
 % solve for u
 temp1 = [0;0;th0];
 temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-%tiph= 3*exp(-gamma*temp); % evaluation  
-tiph = 1.6*ones(size(temp));
+tiph= 3*exp(-gamma*temp); % evaluation  
 tmpA = [ D; A0  ];           % add ghost node to A
 dx = L/K;
-% I = find(A0>0.999,1,'first');
-% x=0:dx:L;
-
-% Note that the steady state we have used has gamma = 40, which is
-% different to what we are doing for constant theta ... This is why it is
-% important that I write the following code leaving the necessary blanks
-% for the mu(theta) portion of the code 
 
 uf= 1/tmpA(end);
 Dx2u = spdiags( [ tmpA(2:end).*tiph(2:end), -(tmpA(1:end-1).*tiph(1:end-1)+tmpA(2:end).*tiph(2:end)), tmpA(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
 Dx2u(1,2) = Dx2u(1,2) + tmpA(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-fu   = - (lam0^2)*St*( tmpA(1:end-1) + tmpA(2:end) )/ 2;
+fu   = - St*( tmpA(1:end-1) + tmpA(2:end) )/ 2;
 fu(1) = fu(1) -2*tiph(1)*P0(1)/(3*dx); 
 fu(end)= fu(end) - uf   * tmpA(end)* tiph(end)/dx^2;
 u0 = Dx2u\fu;
 
 y0(1:K) = A0;
-y0(1+K:2*K) = u0;
-y0(2*K+1:3*K) = lam0.*ones(size(u0));
-
-% y0(1+K:2*K) = th0;
-% y0(2*K+1:3*K) = u0;
+y0(1+K:2*K) = th0;
+y0(2*K+1:3*K) = u0;
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
@@ -100,17 +87,11 @@ tout = linspace(0,T,N);
 % ODE integration 
 reltol = 1.0e-04; abstol = 1.0e-04;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
-[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
+[t,y] = ode15s(@coupledPdeNoFB,tout,y0);
 
-
-return
 A = y(1:N,1:K); % N rows, K columns, each row is a timestep, each column is space point
+th = y(1:N,K+1:2*K);
 
-%th = y(1:N,K+1:2*K);
-lam = y(1:N,2*K+1:3*K);
-
-
-%% FOR NOW, IGNORE HOW WE OBTAIN THE SOLUTION TO U 
 %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
 %     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
@@ -147,6 +128,8 @@ for i=2:N
  
     
 end
+% We want to try obtaining these without having to add it at the end. 
+
 
 thfull = [ zeros(N,1), ...
        th          ];

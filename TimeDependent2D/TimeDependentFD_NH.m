@@ -1,4 +1,4 @@
-function [ th, A, u, x, t ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,plt)
+function [ th, A, u, x, t ] = TimeDependentFD_NH( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,plt)
 
 
 % initialisation
@@ -96,6 +96,8 @@ for i=2:N
 
     % - solve
     th(:,i) = M\( th(:,i-1) + dt*fth );
+    
+    
     
     %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th

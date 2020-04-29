@@ -45,7 +45,8 @@ gamma = 30;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-K=4000; N=100;
+% N is discretisation in time, K is discretisation in space
+N=1000; K=100;
 % end of the domain
 T = 1; L=1 ;
 
@@ -53,42 +54,31 @@ T = 1; L=1 ;
 x1 = 5/7;
 x2 = 6.5/7;
 Qvalue = 1;
-x=linspace(0,L,N);
+x=linspace(0,L,K);
 Q = Qvalue*(x>x1).*(x<x2);    % heat source  
 eps = 1e-2;
 
 
-% We add the heaviside with H=1, and we remove it with H=0. 
-H=0;
 
-% Plots for steady state - 1 , no plots for steady state - 0
-plt = 0;
-
-[P, A0, J0, th0,uf] = InitialConditionsSteady(N,gamma,Qvalue,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
-
-% we change the dimensions so that it is compatible with out FD code. 
-
-% Calculating the initial conditions as a solution of the steady state
-% problem 
-K=4000; N=100;
 % end of the domain
 T = 1; L=1 ;
 
 % We add the heaviside with H=1, and we remove it with H=0. 
-H=0;
+H=1;
 
 % Plots for steady state - 1 , no plots for steady state - 0
 plt = 0;
 % We try with tha=0
-[P, A0, J0, th0,uf] = InitialConditionsSteady(N,gamma,Qvalue,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+[P, A0, J0, th0,uf] = InitialConditionsSteady(K,gamma,Qvalue,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
 
 % we change the dimensions so that it is compatible with out FD code. 
-x=linspace(0,L,N);
+x=linspace(0,L,K);
 
 
 A0=A0';
 th0=th0'; 
 u0 = (1./A0);
+return
 
 [ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, A0(1), gamma, P0, Pe, St, Bi, tha, T, L, K, N, uf, plt );
 
