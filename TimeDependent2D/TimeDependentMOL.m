@@ -34,7 +34,7 @@ Bi= ((L^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 0; 
+gamma = 40; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -47,19 +47,34 @@ eps = 1e-2;
 N=1000; K=300;
 % end of the domain
 T = 1; L=1 ;
+dx = 1/K;
 
 % We add the heaviside with H=1, and we remove it with H=0. 
-H=0;
+H=1;
 
 % Plots for steady state - 1 , no plots for steady state - 0
 plt = 0;
-lam0= 1;  
+
 % We try with tha=0
-[P, A0, J0, th0, ~] = InitialConditionsSteady(K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt,lam0);
- 
+[P, A0, J0, th0, ~] = InitialConditionsSteady(3*K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+
+% Find lam0, then resize both sides with an interpolation (only necessary
+% to do this for the steady state, the conditions on the rest are much
+% nicer because of our rescalings 
+I =    find(A0>0.999,1,'first');
+x = linspace(0,1,3*K);
+lam0 = x(I);
+
+A0top = interp1(x(1:I),A0(1:I),linspace(0,x(I),K),'spline'); 
+th0top = interp1(x(1:I),th0(1:I),linspace(0,x(I),K),'spline');
+
+%A0bot = ones(size(A0top));
+th0bot = interp1(x(I:end),th0(I:end),linspace(x(I),1,K),'spline');
+
+
 %Initial conditions given by A0, th0
-A0=A0';
-th0=th0'; 
+A0=A0top';
+th0=th0top'; 
 
 % Obtain initial condition for u
 % viscosity
@@ -67,10 +82,10 @@ th0=th0';
 % solve for u
 temp1 = [0;0;th0];
 temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-%tiph= 3*exp(-gamma*temp); % evaluation  
-tiph = 1.6*ones(size(temp));
+tiph= 3*exp(-gamma*temp); % evaluation  
+%tiph = 1.6*ones(size(temp));
 tmpA = [ D; A0  ];           % add ghost node to A
-dx = L/K;
+
 % I = find(A0>0.999,1,'first');
 % x=0:dx:L;
 
@@ -87,12 +102,20 @@ fu(1) = fu(1) -2*tiph(1)*P0(1)/(3*dx);
 fu(end)= fu(end) - uf   * tmpA(end)* tiph(end)/dx^2;
 u0 = Dx2u\fu;
 
-y0(1:K) = A0;
-y0(1+K:2*K) = u0;
-y0(2*K+1:3*K) = lam0.*ones(size(u0));
+u0top = u0; 
+%u0bot = ones(size(u0top));
 
-% y0(1+K:2*K) = th0;
-% y0(2*K+1:3*K) = u0;
+
+y0(1:K) = A0top;
+y0(1+K:2*K) = u0top;
+y0(2*K+1:3*K) = th0top; 
+
+y0(3*K+1:4*K) = lam0.*ones(size(u0));
+
+% y0(4*K+1:5*K) = A0bot;
+% y0(5*K+1:6*K) = u0bot;
+y0(4*K+1:5*K) = th0bot;
+
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
@@ -100,22 +123,26 @@ tout = linspace(0,T,N);
 % ODE integration 
 reltol = 1.0e-04; abstol = 1.0e-04;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
-[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
+%[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
+[t,y] = ode15s(@coupledPde,tout,y0); 
+
+Atop  = y(:,1:K);
+utop  = y(:,1+K:2*K);
+th = [y(:,2*K+1:3*K),y(:,4*K+1:5*K)];
+
+lam   = y(:,3*K+1:4*K);
+% 
+% Abot  = y(:,4*K+1:5*K); % This should just be zeros
 
 
-return
-A = y(1:N,1:K); % N rows, K columns, each row is a timestep, each column is space point
-
-%th = y(1:N,K+1:2*K);
-lam = y(1:N,2*K+1:3*K);
-
+% We try again but with the achieved steady state from the previous method 
 
 %% FOR NOW, IGNORE HOW WE OBTAIN THE SOLUTION TO U 
 %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
 %     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-Aforu = A';
-thforu = th'; 
+Aforu = Atop';
+thforu = y(:,2*K+1:3*K)'; 
 u = zeros(size(Aforu));
 u(:,1) = u0; 
 for i=2:N
@@ -148,11 +175,14 @@ for i=2:N
     
 end
 
+%thfullT = [ zeros(N,1), ...
+    %   thtop          ];
+   
 thfull = [ zeros(N,1), ...
-       th          ];
-
+       th         ];
+  
 Afull  = [ D*ones(N,1), ...
-       A           ];
+       Atop           ];
    
 ufull  = [ u' , ...
        uf.*ones(N,1) ];
@@ -161,71 +191,30 @@ dx = 1/K;
 
 x = (0:dx:L)';
 
-% 
-% figure;
-% surf(t,x,Afull')
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$A$ with MOL')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-% 
-% figure;
-% surf(t,x,thfull')
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$\theta$ with MOL')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-% 
-% figure;
-% surf(t,x,ufull')
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$u$ with MOL')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-% Compare with previous code
-plt = 0; 
-th0FD = thfull(end,2:end)';
-A0FD  = Afull(end,2:end)'; 
-
-
-[ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N, plt);
-
-% figure;
-% surf(t,x,A1)
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$A$ with explicit discretisation')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-% 
-% figure;
-% surf(t,x,th1)
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$\theta$ with explicit discretisation')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-% 
-% figure;
-% surf(t,x,u1)
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$u$ with explicit discretisation')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-figure; plot(x,Afull(end,:))
-hold on 
-plot(x,A1(:,end),'--','LineWidth',2)
-legend({'MOL','Explicit FD'},'Interpreter','latex')
+figure;
+surf(t,x,Afull','LineStyle','none')
+xlabel('$t$')
+ylabel('$X$')
+title('$A$ with MOL')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-figure; plot(x,thfull(end,:))
-hold on 
-plot(x,th1(:,end),'--','LineWidth',2)
-legend({'MOL','Explicit FD'},'Interpreter','latex')
+figure;
+surf(t,linspace(0,1,2*K+1),thfull','LineStyle','none')
+xlabel('$t$')
+ylabel('$x$')
+title('$\theta$ with MOL')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-figure; plot(x,ufull(end,:))
-hold on 
-plot(x,u1(:,end),'--','LineWidth',2)
-legend({'MOL','Explicit FD'},'Interpreter','latex')
+figure;
+surf(t,x,ufull','LineStyle','none')
+xlabel('$t$')
+ylabel('$X$')
+title('$u$ with MOL')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
+
+plot(t,lam(:,end))
+xlabel('$t$')
+ylabel('$\lambda(t)$')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
+

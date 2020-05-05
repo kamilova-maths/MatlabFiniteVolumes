@@ -95,6 +95,7 @@ th = y(1:N,K+1:2*K);
 %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
 %     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
+return
 Aforu = A';
 thforu = th'; 
 u = zeros(size(Aforu));

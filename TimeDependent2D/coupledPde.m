@@ -15,10 +15,13 @@ thtop = y(2*K+1:3*K);
 
 lam = y(3*K+1:4*K);
 
-Abot = y(4*K+1:5*K);
-ubot = y(5*K+1:6*K); 
-thbot = y(6*K+1:7*K); 
+%Abot = y(4*K+1:5*K);
+%ubot = y(5*K+1:6*K); 
+thbot = y(4*K+1:5*K); 
 
+% Both of these have to be the same value ... 
+thmatch = thtop(end);
+%thmatch = thbot(end); 
 
 % viscosity
 %mu = @(th) exp(-gamma*th); % Perhaps discretise this as well, but put a pin in that
@@ -27,8 +30,8 @@ thbot = y(6*K+1:7*K);
 x1 = 5/7;
 x2 = 6.5/7;
 Qvalue = 1;
-Qtop = Qvalue*((x/lam)>x1).*((x/lam)<x2);    % heat source at the top
-Qbot = Qvalue*(x>((1-x1)/lam)).*(x<((1-x2)/lam));    % heat source at the bottom
+Q = Qvalue*(x>x1).*(x<x2);    % heat source  
+%Qbot = Qvalue*(x>((1-x1)./lam)).*(x<((1-x2)./lam));    % heat source at the bottom
 
 %% We solve everything for the TOP 
 % We extract the necessary vectors 
@@ -59,7 +62,6 @@ lamt = 1+(u(end)-u(end-1))./(tmpA(end)-tmpA(end-1));  % compute lamt with the ed
 %tmpU = [ u; uf ];
 tmpU = [ u; uf ] -lamt.*[x; 1] ; % size K+1 x 1 
 
-
 % Source term
 
 % add ghost node to A
@@ -73,120 +75,78 @@ F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
 F  = ( F(1:end-1) - F(2:end) ) / dx; % F is the rhs to dA/dt
 Arhs = F./lam+S; 
 
-
-
-
-%   %% Solve for th at next time step (semi-implicit, parabolic)
+%% Solve for th at next time step (semi-implicit, parabolic)
 %  % Assemble matrices
-%  
-% % laplacian for theta
-Dx2 = spdiags( (1./lam.^2).*ones(K,1).*[ 1, -2, 1 ]/dx^2, [-1,0,1], K, K );
-Dx2(K,K-1) = (lam(K).^2).*2/dx^2;
-% 
-%  % - first order derivative
- temp = [D; A];         
-% 
-g    = (2/Pe)./((lam.^2).*( A + [A(2:end);1] )) .* ( temp(2:end) - temp(1:end-1) )/dx - (1./lam).*tmpU(2:end);  % notice u is treated explicitly
-Dx1  = spdiags( (ones(K,1).*g).*[ 1, -1 ]/(2*dx), [-1,1], K, K )';
-%Dx1(K,K-1) = 0;
-% % - reaction term
-Z = 2*Bi/Pe * spdiags( 1./sqrt(([A(2:end);1]+A)/2), 0, K, K );
-%     % - assemble matrix
-M = ( Dx1 + 1/Pe * Dx2 - Z ); 
+A = [Atop; ones(size(Atop))];
+u = [utop; ones(size(utop))];
+th = [thtop; thbot]; 
+
+ % Assemble matrices
+ tmpU = [ u; uf ]; 
+% laplacian for theta
+Dx2 = spdiags( ones(2*K,1).*[ 1, -2, 1 ]/dx^2, [-1,0,1], 2*K, 2*K );
+Dx2(2*K,2*K-1) = 2/dx^2;
+
+ % - first order derivative
+temp = [D; A];         
+
+g    = (2/Pe)./( A + [A(2:end);1] ) .* ( temp(2:end) - temp(1:end-1) )/dx - tmpU(2:end);  % notice u is treated explicitly
+Dx1  = spdiags( (ones(2*K,1).*g).*[ 1, -1 ]/(2*dx), [-1,1], 2*K, 2*K )';
+Dx1(2*K,2*K-1) = 0;
+% - reaction term
+Z = 2*Bi/Pe * spdiags( 1./sqrt(([A(2:end);1]+A)/2), 0, 2*K, 2*K );
+    % - assemble matrix
+M = ( Dx1 + 1/Pe * Dx2 - Z );
+    % - assemble rhs
+    xnew = linspace(0,1,2*K);
+    Q = Qvalue.*(xnew>x1).*(xnew<x2);    % heat source  
+fth = (2*(Bi/Pe) ./sqrt(([A(2:end);1]+A)/2)).*tha + Q';  
+
+tht = M*th +fth;  % Then we impose the Dirichlet condition at X=1, which should match the
+
+thttop = tht(1:K); thtbot = tht(K+1:end); 
+% bottom 
 
 % - assemble rhs
-fth = (2*(Bi/Pe) ./sqrt(([A(2:end);1]+A)/2)).*tha + Qtop;  
 
 At = Arhs; 
-tht = M*thtop +fth;  
 ut = zeros(size(At));
 % - solve
 yt(1:K)= At;
 yt(K+1:2*K) = ut ; 
-yt(2*K+1:3*K) = tht; 
+yt(2*K+1:3*K) = thttop; 
 yt(3*K+1:4*K) = lamt; 
 
 
-%% Then we solve everything for the BOTTOM
-A = Abot;
-u = ubot;
-th = thbot; 
-
-% solve for u
-temp1 = [thtop(end);thtop(end);th];
-temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-%tiph= 3*mu(temp); % evaluation 
-tiph = 3*exp(-gamma*temp); 
-tmpA = [ 1; A  ];           % add ghost node to A
-
-
-Dx2u = spdiags( [ tmpA(2:end).*tiph(2:end), -(tmpA(1:end-1).*tiph(1:end-1)+tmpA(2:end).*tiph(2:end)), tmpA(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
-Dx2u(1,:) =0;
-%Dx2u(1,2) = Dx2u(1,2) + tmpA(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-fu   = - St*((1-lam).^2).*(( tmpA(1:end-1) + tmpA(2:end) )/ 2);
-%fu(1) = fu(1) -1; 
-%fu(end)= fu(end) - uf   * tmpA(end)* tiph(end)/dx^2;
-u = Dx2u\fu;
-u(1) = 1;  % Not sure at all that this is going to work xD
-
-
-tmpA =  (A + [A(2:end);1])/2; % extract A at the edges 
-lamt = 1+(u(end)-u(end-1))./(tmpA(end)-tmpA(end-1));  % compute lamt with the edges
-
-
-%tmpU = [ u; uf ];
-tmpU = lamt.*[x; 1]- [1; u] ; % size K+1 x 1 
-
-
-% Source term
-
-% add ghost node to A
-tmpA = [D; A; 1]; % extend A by 1
-
-%S  = -(A + [A(2:end);1]).*lamt./(2*lam); 
-S = -A.*lamt./(1-lam); 
-FL = tmpA(1:end-1).*tmpU;
-FR = tmpA(2:end  ).*tmpU;
-F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
-F  = ( F(1:end-1) - F(2:end) ) / dx; % F is the rhs to dA/dt
-Arhs = F./(1-lam)+S; 
-
-%   %% Solve for th at next time step (semi-implicit, parabolic)
-%  % Assemble matrices
-%  
-% % laplacian for theta
-Dx2 = spdiags( (1./((1-lam).^2)).*ones(K,1).*[ 1, -2, 1 ]/dx^2, [-1,0,1], K, K );
-Dx2(K,K-1) = ((1-lam(K)).^2).*2/dx^2;
+% %% Then we solve everything for the BOTTOM
+% % Abot = ones(size(A)); 
+% % ubot = ones(size(A)); 
 % 
-%  % - first order derivative
- temp = [D; A];         
+% %tmpU = [ u; uf ];
+% tmpU = lamt.*[x; 1]- 1 ; % size K+1 x 1 
 % 
-g    = (2/Pe)./(((1-lam).^2).*( A + [A(2:end);1] )) .* ( temp(2:end) - temp(1:end-1) )/dx - (1./(1-lam)).*tmpU(2:end);  % notice u is treated explicitly
-Dx1  = spdiags( (ones(K,1).*g).*[ 1, -1 ]/(2*dx), [-1,1], K, K )';
-Dx1(K,K-1) = 0;
-% % - reaction term
-Z = 2*Bi/Pe * spdiags( 1./sqrt(([A(2:end);1]+A)/2), 0, K, K );
-%     % - assemble matrix
-M = ( Dx1 + 1/Pe * Dx2 - Z ); 
-    % - assemble rhs
-fth = (2*(Bi/Pe) ./sqrt(([A(2:end);1]+A)/2)).*tha + Qbot;  
+% g    = - (1./(1-lam)).*tmpU(2:end);  % notice u is treated explicitly
+% Dx1  = spdiags( (ones(K,1).*g).*[ 1, -1 ]/(2*dx), [-1,1], K, K )';
+% Dx1(2,1) = 0;
+% % % - reaction term
+% Z = 2*Bi/Pe * spdiags( ones(K,1), 0, K, K );
+% %     % - assemble matrix
+% M = ( Dx1 + 1/Pe * Dx2 - Z ); 
+% %M(K,:) =0; M(:,K) = 0; 
+%     % - assemble rhs
+% fth = (Bi/Pe).*tha.*ones(K,1) + Qbot;  
+% 
+% fth(end) = fth(end) + thmatch.*(g(end)/(2*dx) + (1/(Pe*lam(end).^2.*(dx.^2)))); % we incorporate the matching condition 
 
-At = Arhs; 
-tht = M*thtop +fth;  
-ut = zeros(size(At));
-% - solve
-yt(1:K)= At;
-yt(K+1:2*K) = ut ; 
-yt(2*K+1:3*K) = tht; 
-yt(3*K+1:4*K) = lamt; 
-
-
-
-
-
-
-
-
+ 
+%tht = M*thbot+fth;  
+%At = zeros(size(tht)); 
+%ut = zeros(size(At));
+%ut = zeros(size(At)); 
+% % - solve
+% yt(4*K+1:5*K)= At;
+% yt(5*K+1:6*K) = ut ; 
+yt(4*K+1:5*K) = thtbot; 
 
 yt = yt'; 
 

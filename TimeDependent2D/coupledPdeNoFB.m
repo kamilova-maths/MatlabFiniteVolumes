@@ -70,7 +70,6 @@ M = ( Dx1 + 1/Pe * Dx2 - Z );
     % - assemble rhs
 fth = (2*(Bi/Pe) ./sqrt(([A(2:end);1]+A)/2)).*tha + Q;  
 
-
 At = F; 
 tht = M*th +fth;  
 
