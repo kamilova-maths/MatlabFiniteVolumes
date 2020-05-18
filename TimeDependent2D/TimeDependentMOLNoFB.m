@@ -62,24 +62,16 @@ th0=th0';
 % Obtain initial condition for u
 % viscosity
 %mu = @(th) exp(-gamma*th); % Perhaps discretise this as well, but put a pin in that
-% solve for u
-temp1 = [0;0;th0];
-temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-tiph= 3*exp(-gamma*temp); % evaluation  
-tmpA = [ D; A0  ];           % add ghost node to A
+
 dx = L/K;
 
-uf= 1/tmpA(end);
-Dx2u = spdiags( [ tmpA(2:end).*tiph(2:end), -(tmpA(1:end-1).*tiph(1:end-1)+tmpA(2:end).*tiph(2:end)), tmpA(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
-Dx2u(1,2) = Dx2u(1,2) + tmpA(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-fu   = - St*( tmpA(1:end-1) + tmpA(2:end) )/ 2;
-fu(1) = fu(1) -2*tiph(1)*P0(1)/(3*dx); 
-fu(end)= fu(end) - uf   * tmpA(end)* tiph(end)/dx^2;
-u0 = Dx2u\fu;
+uf= 1/A0(end);
+
 
 y0(1:K) = A0;
-y0(1+K:2*K) = th0;
-y0(2*K+1:3*K) = u0;
+%y0(1+K:2*K) = th0;
+y0(1+K:2*K) = A0.*th0;
+
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
@@ -87,58 +79,31 @@ tout = linspace(0,T,N);
 % ODE integration 
 reltol = 1.0e-04; abstol = 1.0e-04;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
-[t,y] = ode15s(@coupledPdeNoFB,tout,y0);
+%[t,y] = ode15s(@coupledPdeNoFB,tout,y0);
+[t,y] = ode15s(@coupledPdeNoFBwithFV,tout,y0);
 
 A = y(1:N,1:K); % N rows, K columns, each row is a timestep, each column is space point
-th = y(1:N,K+1:2*K);
+w = y(1:N,K+1:2*K);
 
+th = w./A; 
 %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
 %     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-return
-Aforu = A';
-thforu = th'; 
-u = zeros(size(Aforu));
-u(:,1) = u0; 
+u = zeros(size(A));
+u0 = usolutionNoFB(A0,th0);  % Do I even need this guy? 
+u(1,:) = u0; 
 for i=2:N
-   
-    %% Solve for u at next time step (laplacian)
-%     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
-%     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-    
-    % Technically can do this in one line, but I can't figure out how -
-    % this gives same results as above so we don't bother changing it
-    temp1 = [0;0;thforu(:,i)];
-    temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-    tiph= 3*exp(-gamma*temp); 
-    
-    Ag  = [ D; Aforu(:,i)  ];           % add ghost node to A
-
-    Dx2u = spdiags( [ Ag(2:end).*tiph(2:end), -(Ag(1:end-1).*tiph(1:end-1)+Ag(2:end).*tiph(2:end)), Ag(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
-    Dx2u(1,2) = Dx2u(1,2) + Ag(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-    fu   = - St*( Ag(1:end-1) + Ag(2:end) )/ 2;
-
-    if length(P0)==1
-    fu(1) = fu(1) -2*tiph(1)*P0/(3*dx);  % include derivative (again, Neumann BC)
-    else
-    fu(1) = fu(1) -2*tiph(1)*P0(i)/(3*dx);  % include derivative (again, Neumann BC)
-    end
-    
-    fu(end)= fu(end) - uf   * Ag(end)* tiph(end)/dx^2;
-    u(:,i) = Dx2u\fu;
- 
+    u(i,:) = usolutionNoFB(A(i,:)',th(i,:)');   
     
 end
-% We want to try obtaining these without having to add it at the end. 
 
-
-thfull = [ zeros(N,1), ...
+th = [ zeros(N,1), ...
        th          ];
 
-Afull  = [ D*ones(N,1), ...
+A  = [ D*ones(N,1), ...
        A           ];
    
-ufull  = [ u' , ...
+u  = [ u , ...
        uf.*ones(N,1) ];
    
 dx = 1/K;
@@ -146,12 +111,12 @@ dx = 1/K;
 x = (0:dx:L)';
 
 % 
-% figure;
-% surf(t,x,Afull')
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$A$ with MOL')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+figure;
+surf(t,x,A','LineStyle','none')
+xlabel('$t$','Interpreter','latex')
+ylabel('$x$','Interpreter','latex')
+title('$A$ with MOL','Interpreter','latex')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 % 
 % figure;
 % surf(t,x,thfull')
@@ -169,8 +134,8 @@ x = (0:dx:L)';
 
 % Compare with previous code
 plt = 0; 
-th0FD = thfull(end,2:end)';
-A0FD  = Afull(end,2:end)'; 
+th0FD = th(end,2:end)';
+A0FD  = A(end,2:end)'; 
 
 
 [ th1, A1, u1, x1, t1 ] = TimeDependentFDfull_v3( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N, plt);
@@ -196,19 +161,19 @@ A0FD  = Afull(end,2:end)';
 % title('$u$ with explicit discretisation')
 % set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-figure; plot(x,Afull(end,:))
+figure; plot(x,A(end,:))
 hold on 
 plot(x,A1(:,end),'--','LineWidth',2)
 legend({'MOL','Explicit FD'},'Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-figure; plot(x,thfull(end,:))
+figure; plot(x,th(end,:))
 hold on 
 plot(x,th1(:,end),'--','LineWidth',2)
 legend({'MOL','Explicit FD'},'Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-figure; plot(x,ufull(end,:))
+figure; plot(x,u(end,:))
 hold on 
 plot(x,u1(:,end),'--','LineWidth',2)
 legend({'MOL','Explicit FD'},'Interpreter','latex')

@@ -48,6 +48,7 @@ N=1000; K=300;
 % end of the domain
 T = 1; L=1 ;
 dx = 1/K;
+uf = 1; 
 
 % We add the heaviside with H=1, and we remove it with H=0. 
 H=1;
@@ -75,16 +76,12 @@ th0bot = interp1(x(I:end),th0(I:end),linspace(x(I),1,K),'spline');
 %Initial conditions given by A0, th0
 A0=A0top';
 th0=th0top'; 
+th0bot = flip(th0bot)'; 
 
 % Obtain initial condition for u
 % viscosity
 %mu = @(th) exp(-gamma*th); % Perhaps discretise this as well, but put a pin in that
 % solve for u
-temp1 = [0;0;th0];
-temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-tiph= 3*exp(-gamma*temp); % evaluation  
-%tiph = 1.6*ones(size(temp));
-tmpA = [ D; A0  ];           % add ghost node to A
 
 % I = find(A0>0.999,1,'first');
 % x=0:dx:L;
@@ -94,28 +91,13 @@ tmpA = [ D; A0  ];           % add ghost node to A
 % important that I write the following code leaving the necessary blanks
 % for the mu(theta) portion of the code 
 
-uf= 1/tmpA(end);
-Dx2u = spdiags( [ tmpA(2:end).*tiph(2:end), -(tmpA(1:end-1).*tiph(1:end-1)+tmpA(2:end).*tiph(2:end)), tmpA(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
-Dx2u(1,2) = Dx2u(1,2) + tmpA(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-fu   = - (lam0^2)*St*( tmpA(1:end-1) + tmpA(2:end) )/ 2;
-fu(1) = fu(1) -2*tiph(1)*P0(1)/(3*dx); 
-fu(end)= fu(end) - uf   * tmpA(end)* tiph(end)/dx^2;
-u0 = Dx2u\fu;
 
-u0top = u0; 
 %u0bot = ones(size(u0top));
+y0(1:K) = A0;
+y0(1+K:2*K) = A0.*th0;
+y0(2*K+1:3*K) = lam0.*ones(size(A0));  
 
-
-y0(1:K) = A0top;
-y0(1+K:2*K) = u0top;
-y0(2*K+1:3*K) = th0top; 
-
-y0(3*K+1:4*K) = lam0.*ones(size(u0));
-
-% y0(4*K+1:5*K) = A0bot;
-% y0(5*K+1:6*K) = u0bot;
-y0(4*K+1:5*K) = th0bot;
-
+y0(3*K+1:4*K) = th0bot;
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
@@ -124,13 +106,24 @@ tout = linspace(0,T,N);
 reltol = 1.0e-04; abstol = 1.0e-04;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
 %[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
+tic
 [t,y] = ode15s(@coupledPde,tout,y0); 
+toc
+A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
 
-Atop  = y(:,1:K);
-utop  = y(:,1+K:2*K);
-th = [y(:,2*K+1:3*K),y(:,4*K+1:5*K)];
+th = y(:,K+1:2*K)./A;
 
-lam   = y(:,3*K+1:4*K);
+lam   = y(:,2*K+1:3*K);
+
+phi = y(:,3*K+1:4*K); 
+
+u = zeros(size(A));
+u0 = usolutionNoFB(A0,th0);  % Do I even need this guy? 
+u(1,:) = u0; 
+for i=2:N
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)');   
+    
+end
 % 
 % Abot  = y(:,4*K+1:5*K); % This should just be zeros
 
@@ -141,80 +134,137 @@ lam   = y(:,3*K+1:4*K);
 %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
 %     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-Aforu = Atop';
-thforu = y(:,2*K+1:3*K)'; 
-u = zeros(size(Aforu));
-u(:,1) = u0; 
-for i=2:N
-   
-    %% Solve for u at next time step (laplacian)
-%     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
-%     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-    
-    % Technically can do this in one line, but I can't figure out how -
-    % this gives same results as above so we don't bother changing it
-    temp1 = [0;0;thforu(:,i)];
-    temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
-    tiph= 3*exp(-gamma*temp); 
-    
-    Ag  = [ D; Aforu(:,i)  ];           % add ghost node to A
-
-    Dx2u = spdiags( [ Ag(2:end).*tiph(2:end), -(Ag(1:end-1).*tiph(1:end-1)+Ag(2:end).*tiph(2:end)), Ag(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
-    Dx2u(1,2) = Dx2u(1,2) + Ag(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-    fu   = - St*( Ag(1:end-1) + Ag(2:end) )/ 2;
-
-    if length(P0)==1
-    fu(1) = fu(1) -2*tiph(1)*P0/(3*dx);  % include derivative (again, Neumann BC)
-    else
-    fu(1) = fu(1) -2*tiph(1)*P0(i)/(3*dx);  % include derivative (again, Neumann BC)
-    end
-    
-    fu(end)= fu(end) - uf   * Ag(end)* tiph(end)/dx^2;
-    u(:,i) = Dx2u\fu;
- 
-    
-end
 
 %thfullT = [ zeros(N,1), ...
     %   thtop          ];
    
-thfull = [ zeros(N,1), ...
+thtop = [ zeros(N,1), ...
        th         ];
   
-Afull  = [ D*ones(N,1), ...
-       Atop           ];
+Atop  = [ D*ones(N,1), ...
+       A           ];
    
-ufull  = [ u' , ...
+tmpA =  (Atop + [Atop(:,2:end), ones(N,1)])/2; % extract A at the edges 
+Abot = ones(N,K); 
+Afull =    [tmpA, Abot];  
+ufull  = [ u , ...
        uf.*ones(N,1) ];
    
 dx = 1/K;
 
 x = (0:dx:L)';
+[X, T1] = meshgrid(x,t);
+Xresc1 = [lam0.*ones(N,1), lam].*X; 
+[X, T2] = meshgrid((dx:dx:L)',t);
+Xresc2 = -X.*(L-lam)+L;
+
+% figure;
+% surf(T1,Xresc1,thtop,'LineStyle','none')
+% xlabel('$t$','Interpreter','latex')
+% ylabel('$x$', 'Interpreter','latex')
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 
+% figure; 
+% surf(T2,Xresc2,phi,'LineStyle','none')
+% xlabel('$t$','Interpreter','latex')
+% ylabel('$x$', 'Interpreter','latex')
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+% 
+% 
+% figure; 
+% surf(T1,Xresc1,thtop,'LineStyle','none')
+% hold on 
+% surf(T2,Xresc2,phi,'LineStyle','none')
+% xlabel('$t$','Interpreter','latex')
+% ylabel('$x$', 'Interpreter','latex')
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+
+numel=10;
+datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [thtop(1,:)'; flip(phi(1,:))']];
+
+figure; 
+for i = N/numel:(N/numel):N
+    plot(Xresc1(i,:),thtop(i,:))
+    hold on
+    plot(Xresc2(i,:),phi(i,:))
+    datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
+end
+csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
+
+
+
+% numel=10;
+% datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [tmpA(1,:)'; flip(Abot(1,:))']];
+% figure; 
+% for i = N/numel:(N/numel):N
+%     plot(Xresc1(i,:),tmpA(i,:))
+%     hold on
+%     plot(Xresc2(i,:),Abot(i,:))
+%     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [tmpA(i,:)'; flip(Abot(i,:))']]];
+% end
+% 
+% %csvwrite('ADiscreteTimesteps.csv',datamat); 
+% 
+% numel=10;
+% datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [ufull(1,:)'; flip(Abot(1,:))']];
+% figure; 
+% for i = N/numel:(N/numel):N
+%     plot(Xresc1(i,:),ufull(i,:))
+%     hold on
+%     plot(Xresc2(i,:),Abot(i,:))
+%     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [ufull(i,:)'; flip(Abot(i,:))']]];
+% end
+% csvwrite('uDiscreteTimesteps.csv',datamat);
+% 
+% this is a file that has two columns per timestep, where the first column
+% is the x values and the second one the theta values. In the x and theta
+% values, we have appended both sides onto one vector, so Xcol = Xresc1,
+% Xresc2, and similarly for theta 
+
+
+
+return 
 figure;
-surf(t,x,Afull','LineStyle','none')
-xlabel('$t$')
-ylabel('$X$')
-title('$A$ with MOL')
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-figure;
-surf(t,linspace(0,1,2*K+1),thfull','LineStyle','none')
-xlabel('$t$')
-ylabel('$x$')
-title('$\theta$ with MOL')
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
+% surf(t,x.*[lam(1,1); lam(:,end)],Atop','LineStyle','none')
+% xlabel('$t$')
+% ylabel('$X$')
+% title('$A$ with MOL','Interpreter','latex')
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+% 
+% figure;
+% surf(t,x,thfull','LineStyle','none')
+% xlabel('$t$')
+% ylabel('$x$')
+% title('$\theta$ with MOL','Interpreter','latex')
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 figure;
 surf(t,x,ufull','LineStyle','none')
 xlabel('$t$')
 ylabel('$X$')
-title('$u$ with MOL')
+title('$u$ with MOL','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 plot(t,lam(:,end))
-xlabel('$t$')
-ylabel('$\lambda(t)$')
+xlabel('$t$','Interpreter','latex')
+ylabel('$\lambda(t)$','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
+
+datamat = [[t(1,end); t(10:10:end)],[lam(1,end); lam(10:10:end,end)]];
+
+csvwrite('lambdavst.csv',datamat);
+
+figure;
+%surf(T1,Xresc1,Atop,'LineStyle','none')
+surf(T3,Xresc3,Afull,'LineStyle','none')
+
+% hold on
+% Abot = ones(N,K); 
+%surf(T2,Xresc2,Abot,'LineStyle','none')
+xlabel('$t$','Interpreter','latex')
+ylabel('$x$', 'Interpreter','latex')
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
+
+
 

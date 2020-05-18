@@ -1,5 +1,5 @@
-function u = usolution(A,theta,lam)
-% usolution  Computes solution to u, using A and theta. If the solution is
+function u = usolutionNoFB(A,theta)
+% usolution  Computes solution to u, using A and theta, with no free boundary. If the solution is
 % computed separately from theta, then input a matrix of zeros. 
 % INPUT:  A     : K x 1  vector for A
 %         theta : K x 1 vector for theta - it could also be a constant of
@@ -24,9 +24,10 @@ global P0 K gamma uf St L D
 
     Dx2u = spdiags( [ Atmp(2:end).*tiph(2:end), -(Atmp(1:end-1).*tiph(1:end-1)+Atmp(2:end).*tiph(2:end)), Atmp(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
     Dx2u(1,2) = Dx2u(1,2) + Atmp(1).*tiph(1) / dx^2;              % include effect from Neumann BC
-    fu   = - St.*(lam.^2).*( Atmp(1:end-1) + Atmp(2:end) )/ 2;
+    fu   = - St.*( Atmp(1:end-1) + Atmp(2:end) )/ 2;
 
     fu(1) = fu(1) -2*tiph(1)*P0/(3*dx);  % include derivative (again, Neumann BC)
+    
     
     fu(end)= fu(end) - uf   * Atmp(end)* tiph(end)/dx^2;
     u = Dx2u\fu;
