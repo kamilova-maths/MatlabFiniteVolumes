@@ -90,7 +90,7 @@ A0 = (Aex(1:end-1) + Aex(2:end))./2;
 
 th0 = zeros(size(A0)); 
 uf = 1/A0(end); 
-%u0 = usolution(A0,th0,lam0); 
+u0 = usolution(A0,th0,lam0); 
 
 
 y0(1:K) = A0;
@@ -112,7 +112,7 @@ lam   = y(:,1+K:2*K);
 % We construct u from A 
 
 umat = zeros(size(A));
-umat(1,:) = 1./A0; 
+umat(1,:) = u0; 
 for i=2:N
     umat(i,:) = usolution(A(i,:)',zeros(size(A(i,:)))',lam(i,:)'); 
 end
@@ -137,7 +137,15 @@ plot(x,Afull(100:100:end,:))
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 xlabel('$x$','Interpreter','latex')
 ylabel('$A$','Interpreter','latex')
-% 
+% A0 = [D; A0]; 
+figure; 
+u0 = [u0; uf];
+plot(x,u0,'--')
+hold on
+plot(x,ufull(100:100:end,:))
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
+xlabel('$x$','Interpreter','latex')
+ylabel('$u$','Interpreter','latex')
 % figure;
 % surf(t,x,Afull','LineStyle','none')
 % xlabel('$t$')
@@ -161,12 +169,16 @@ ylim([0.5 1])
 ylabel('$\lambda(t)$','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-
+return
 valuesmatrix=[x(1:10:end),A0(1:10:end),Afull(100:100:end,1:10:end)'];
 csvwrite('Awithlambda1constantmu.csv',valuesmatrix)
 
 valuesmatrix=[t(1:10:end),lam(1:10:end,end)] ; 
 csvwrite('lambdaconstantmu.csv', valuesmatrix)
+
+valuesmatrix=[x(1:10:end),u0(1:10:end),ufull(100:100:end,1:10:end)'];
+csvwrite('uwithlambda1constantmu.csv',valuesmatrix)
+
 % figure;
 % surf(t,x,thfull')
 % xlabel('$t$')

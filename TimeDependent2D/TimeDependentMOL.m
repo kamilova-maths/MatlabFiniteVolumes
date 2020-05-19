@@ -4,7 +4,7 @@ clc
 
 % Parameters shared with other routines (I'm not very sure about this,but
 % let's give it a try)
-global Pe Bi tha N K gamma P0 St T L D uf 
+global Pe Bi tha N K gamma P0 St T L D uf x1 x2
 
 % Define parameters
 % Data to use 
@@ -124,7 +124,41 @@ for i=2:N
     u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)');   
     
 end
+'Completed Round 1'
+
+% Round 2 
+A0  = A(end,:);
+u0 = u(end,:);
+th0 = th(end,:);
+th0bot = phi(end,:); 
+
+y0(1:K) = A0;
+y0(1+K:2*K) = A0.*th0;
+y0(2*K+1:3*K) = lam0.*ones(size(A0));  
+
+y0(3*K+1:4*K) = th0bot;
 % 
+
+tic
+[t,y] = ode15s(@coupledPde,tout,y0); 
+toc
+A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
+
+th = y(:,K+1:2*K)./A;
+
+lam   = y(:,2*K+1:3*K);
+
+phi = y(:,3*K+1:4*K); 
+
+u = zeros(size(A));
+u0 = usolutionNoFB(A0',th0');  % Do I even need this guy? 
+u(1,:) = u0; 
+for i=2:N
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)');   
+    
+end
+
+
 % Abot  = y(:,4*K+1:5*K); % This should just be zeros
 
 
@@ -190,7 +224,7 @@ for i = N/numel:(N/numel):N
     plot(Xresc2(i,:),phi(i,:))
     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
 end
-csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
+%csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
 
 
 

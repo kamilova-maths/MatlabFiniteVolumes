@@ -17,7 +17,6 @@ close all;
 Tin = 0;
 Pin = 0;
 
-%p.Pin = 0; %produces nicer plots
 Ain = 0.2;
 
 % % initial solve using easy parameters
@@ -36,20 +35,20 @@ end
 %Thinterp = sol.y(4,:); 
 Pinterp=interp1(sol.x,sol.y(1,:),linspace(0,L,n),'spline');
 Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n+1),'pchip');
-
+Thinterp = interp1(sol.x,sol.y(4,:),linspace(0,L,n+1),'pchip');
 %Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n),'spline');
 
 % option #1 - taking the values evaluated at the point
  uf=1/Ainterp(end);
 
 Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
-
+Thinterp=(Thinterp(1:end-1)+Thinterp(2:end))/2;
 
 % option #2 - taking the values evaluated at the cell
 %uf=1/Ainterp(end);
 
 Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,L,n));
-Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n),'spline');
+%Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n),'spline');
 
 
 if plt==1

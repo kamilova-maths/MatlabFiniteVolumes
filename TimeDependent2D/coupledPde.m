@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPde(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf 
+global Pe Bi tha L K D uf x1 x2
 % for i=1:n
 %     A(i) = y(i); 
 %     th(i) = y(i+n);
@@ -17,8 +17,7 @@ lam = y(2*K+1:3*K);
 phi = y(3*K+1:4*K); 
 
 % heat source
-x1 = 5/7;
-x2 = 6.5/7;
+
 Qvalue = 1;
 Q = @(x) Qvalue*(x>x1).*(x<x2);    % heat source  
 Qth = Qvalue*(x>x1/lam(end)).*(x<x2/lam(end));   % heat source
