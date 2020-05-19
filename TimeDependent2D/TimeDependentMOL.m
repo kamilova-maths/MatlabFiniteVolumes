@@ -12,7 +12,7 @@ global Pe Bi tha N K gamma P0 St T L D uf x1 x2
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
 c= 900; % Fitt and Howell
-L=7; % Temperature Profiles in Soderberg Electrodes
+Ld=7; % Temperature Profiles in Soderberg Electrodes
 uc = 10^-5; %Bergstrom approximation
 R0=0.5;
 R1=1; 
@@ -24,17 +24,17 @@ h = 7;
 
 %Defining non-dimensional parameters
 % Peclet number
-Pe = (rho*c*uc*L)/(k);
-epsilon=R1/L;
-St=(rho*g*L^2)/(uc*mu0);
-P0 = (10000*L)/((R1^2)*uc*mu0);
+Pe = (rho*c*uc*Ld)/(k);
+epsilon=R1/Ld;
+St=(rho*g*Ld^2)/(uc*mu0);
+P0 = (10000*Ld)/((R1^2)*uc*mu0);
 
-DeltaT = (Qc*L)/(rho*c*uc);
-Bi= ((L^2)*h)/(k*R1); 
+DeltaT = (Qc*Ld)/(rho*c*uc);
+Bi= ((Ld^2)*h)/(k*R1); 
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 40; 
+gamma = 30; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -46,8 +46,8 @@ eps = 1e-2;
 % problem 
 N=1000; K=300;
 % end of the domain
-T = 1; L=1 ;
-dx = 1/K;
+T = 1; L=1.5 ;
+dx = L/K;
 uf = 1; 
 
 % We add the heaviside with H=1, and we remove it with H=0. 
@@ -57,20 +57,23 @@ H=1;
 plt = 0;
 
 % We try with tha=0
-[P, A0, J0, th0, ~] = InitialConditionsSteady(3*K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+[P, A0, J0, th0, ~] = InitialConditionsSteady(4*K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+%pause
+%close all 
+
 
 % Find lam0, then resize both sides with an interpolation (only necessary
 % to do this for the steady state, the conditions on the rest are much
 % nicer because of our rescalings 
-I =    find(A0>0.999,1,'first');
-x = linspace(0,1,3*K);
+I =    find(A0>0.99999,1,'first');
+x = linspace(0,L,4*K);
 lam0 = x(I);
 
 A0top = interp1(x(1:I),A0(1:I),linspace(0,x(I),K),'spline'); 
 th0top = interp1(x(1:I),th0(1:I),linspace(0,x(I),K),'spline');
 
 %A0bot = ones(size(A0top));
-th0bot = interp1(x(I:end),th0(I:end),linspace(x(I),1,K),'spline');
+th0bot = interp1(x(I:end),th0(I:end),linspace(x(I),L,K),'spline');
 
 
 %Initial conditions given by A0, th0
@@ -109,6 +112,7 @@ options = odeset('RelTol',reltol,'AbsTol',abstol);
 tic
 [t,y] = ode15s(@coupledPde,tout,y0); 
 toc
+%pause
 A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
 
 th = y(:,K+1:2*K)./A;
@@ -121,20 +125,56 @@ u = zeros(size(A));
 u0 = usolutionNoFB(A0,th0);  % Do I even need this guy? 
 u(1,:) = u0; 
 for i=2:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)');   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)',L);   
     
 end
-'Completed Round 1'
+disp('Completed Round 1')
+
+thtop = [ zeros(N,1), ...
+       th         ];
+  
+Atop  = [ D*ones(N,1), ...
+       A           ];
+   
+tmpA =  (Atop + [Atop(:,2:end), ones(N,1)])/2; % extract A at the edges 
+Abot = ones(N,K); 
+Afull =    [tmpA, Abot];  
+ufull  = [ u , ...
+       uf.*ones(N,1) ];
+   
+dx = 1/K;
+
+x = (0:dx:1)';
+[X, T1] = meshgrid(x,t);
+Xresc1 = [lam(:,1), lam].*X; 
+[X, T2] = meshgrid((dx:dx:1)',t);
+Xresc2 = -X.*(L-lam)+L;
+
+numel=10;
+datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [thtop(1,:)'; flip(phi(1,:))']];
+
+figure; 
+for i = N/numel:(N/numel):N
+    plot(Xresc1(i,:),thtop(i,:))
+    hold on
+    plot(Xresc2(i,:),phi(i,:)) 
+    %pause
+    datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
+end
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
+
+
+return
 
 % Round 2 
 A0  = A(end,:);
-u0 = u(end,:);
+%u0 = u(end,:);
 th0 = th(end,:);
-th0bot = phi(end,:); 
+th0bot = flip( phi(end,:) ); 
 
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
-y0(2*K+1:3*K) = lam0.*ones(size(A0));  
+y0(2*K+1:3*K) = lam(end,:);  
 
 y0(3*K+1:4*K) = th0bot;
 % 
@@ -154,7 +194,7 @@ u = zeros(size(A));
 u0 = usolutionNoFB(A0',th0');  % Do I even need this guy? 
 u(1,:) = u0; 
 for i=2:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)');   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)', L);   
     
 end
 
@@ -184,13 +224,14 @@ Afull =    [tmpA, Abot];
 ufull  = [ u , ...
        uf.*ones(N,1) ];
    
-dx = 1/K;
+dx = L/K;
 
 x = (0:dx:L)';
 [X, T1] = meshgrid(x,t);
-Xresc1 = [lam0.*ones(N,1), lam].*X; 
+Xresc1 = [lam(:,1), lam].*X; 
 [X, T2] = meshgrid((dx:dx:L)',t);
 Xresc2 = -X.*(L-lam)+L;
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 % figure;
 % surf(T1,Xresc1,thtop,'LineStyle','none')
@@ -214,29 +255,30 @@ Xresc2 = -X.*(L-lam)+L;
 % ylabel('$x$', 'Interpreter','latex')
 % set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-numel=10;
+numel=20;
 datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [thtop(1,:)'; flip(phi(1,:))']];
 
 figure; 
 for i = N/numel:(N/numel):N
     plot(Xresc1(i,:),thtop(i,:))
     hold on
-    plot(Xresc2(i,:),phi(i,:))
+    plot(Xresc2(i,:),phi(i,:)) 
+    pause
     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
 end
 %csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
 
 
 
-% numel=10;
-% datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [tmpA(1,:)'; flip(Abot(1,:))']];
-% figure; 
-% for i = N/numel:(N/numel):N
-%     plot(Xresc1(i,:),tmpA(i,:))
-%     hold on
-%     plot(Xresc2(i,:),Abot(i,:))
-%     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [tmpA(i,:)'; flip(Abot(i,:))']]];
-% end
+numel=10;
+datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [tmpA(1,:)'; flip(Abot(1,:))']];
+figure; 
+for i = N/numel:(N/numel):N
+    plot(Xresc1(i,:),tmpA(i,:))
+    hold on
+    plot(Xresc2(i,:),Abot(i,:))
+    datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [tmpA(i,:)'; flip(Abot(i,:))']]];
+end
 % 
 % %csvwrite('ADiscreteTimesteps.csv',datamat); 
 % 
