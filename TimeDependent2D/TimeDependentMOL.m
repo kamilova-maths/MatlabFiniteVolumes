@@ -34,7 +34,7 @@ Bi= ((Ld^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 30; 
+gamma = 20; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;

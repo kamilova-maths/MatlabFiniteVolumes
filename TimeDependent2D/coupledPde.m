@@ -59,13 +59,16 @@ FLw = tmpw(1:end-1).*tmpU;
 FRw = tmpw(2:end  ).*tmpU; 
 Atmp  = [ D; A; 1];  
 thtmp = [ 0; th; phi(end)]; % edges or no edges, it is a similar solution 
+
 Fw = (FLw + FRw + abs(tmpU).*(tmpw(1:end-1) - tmpw(2:end) ) ) / 2 +  ...
     (1./((dX).*Pe.*(lam(end)))).*(- Atmp(1:end-1).*(thtmp(2:end)-thtmp(1:end-1))); 
 Fw = (Fw(1:end-1) - Fw(2:end) )./(lam(end).* dX); 
-thtmp = (thtmp(1:end-1)+thtmp(2:end))/2;   % extract th at the edges    
-Sw = - (A.*lamt.*thtmp(2:end))./lam  - ...
-    (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(thtmp(2:end)-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
-wt = Fw + Sw;  
+%thtmp = (thtmp(1:end-1)+thtmp(2:end))/2;   % extract th at the edges    
+
+%Sw = - (A.*lamt.*thtmp(2:end))./lam  - ...
+ %   (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(thtmp(2:end)-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
+Sw = - (A.*lamt.*th)./lam  - ...
+    (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(th-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
 
 % HERE, WE WANT TO SOLVE, FROM X=1 TO X=0, 
 % Calculate fluxes for phi
@@ -75,34 +78,33 @@ dXbar = 1/K;
 tmpU = lamt.*[1; Xbar] -1; % the scaling of U is outside of the flux function. size K+1 x 1 THIS IS U, FROM X=1 TO X=0  [lamt should be constant anyway]
 % Here, phi(1) corresponds to phi at x=1, X=0, and phi(end) corresponds to
 % phi at x=lam, X=1. 
+phi(end) = th(end); 
 tmphi = [phi(1); phi; th(end)]; % In theory, this "1" shouldn't matter at all,  I think I am imposing neumann here ... by accident
 % tmphi = flip(tmphi); % phi was provided flipped ... 
 FLp = tmphi(1:end-1).*tmpU;
 FRp = tmphi(2:end  ).*tmpU; 
 %tmphi_edge = (phi + [phi(2:end); th(end)])/2;
-tmphi_edge = (tmphi(1:end-1)+tmphi(2:end))/2;   % extract th at the edges
+%tmphi_edge = (tmphi(1:end-1)+tmphi(2:end))/2;   % extract th at the edges
 %tmphi_edge = [phi(1); tmphi_edge; th(end)]; 
 %phix = (tmphi(3:end) - tmphi(1:end-2))./(2*dXbar);
-phix = derivative(tmphi_edge,dXbar)'; 
-%phix= [0; phix]; % ????? does this make sense?  
-phix(1) = 0; 
+phix = derivative(phi,dXbar)'; 
+phix= [0; phix]; % ????? does this make sense?  
+%phix(1) = 0; 
+%phix(end) = (th(end)-tmphi_edge(end-1))/dXbar; 
 Fp = (FLp + FRp + abs(tmpU).*(tmphi(1:end-1) - tmphi(2:end) ) ) / 2 - (phix) ./ (Pe*(L-lam(end))); 
 
 % Calculate flux differences
 Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam(end)).*dXbar) ; 
   
-% Fp(end) = Fw(end); 
+Fp(end) = Fw(end); % If ( change this, it doesn't matter what phix end is. 
 
 % Calculate source terms
-Sp =  (lamt.*tmphi(2:end-1))./(L-lam(end))  - (2*Bi./Pe).*(tmphi(2:end-1)-tha) + Q(L-flip(Xbar).*(L-lam(end))); 
+Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi-tha) + Q(L-flip(Xbar).*(L-lam(end))); 
 %  plot(Qphi(Xbar))
 %  hold on 
  % Calculate the rhs
+wt = Fw + Sw;  
 phit = Fp +Sp ;
-
-%flip back phi
-%phit = flip(phit); 
-
 
 % - assemble rhs
 At = Arhs; 
@@ -112,9 +114,9 @@ yt(1:K)= [At(1:end-1); 0];
 
 % Don't set these guys to zero as this creates a maximum at that point,
 % given that the derivative wrt x is also zero (or close to it) 
-% wt(end) = 0;
-yt(K+1:2*K) = wt;  
- %phit(end) = wt(end); 
+wt(end) = 0;
+yt(K+1:2*K) = wt;
+phit(end) = 0; 
 yt(2*K+1:3*K) = lamt; 
 yt(3*K+1:4*K) = phit; 
 yt = yt'; 
