@@ -4,7 +4,7 @@ clc
 
 % Parameters shared with other routines (I'm not very sure about this,but
 % let's give it a try)
-global Pe Bi tha N K gamma P0 St T L D uf x1 x2
+global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q
 
 % Define parameters
 % Data to use 
@@ -44,7 +44,7 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=1000; K=300;
+N=1000; K=600;
 % end of the domain
 T = 1; L=1.5 ;
 dx = L/K;
@@ -57,7 +57,7 @@ H=1;
 plt = 0;
 
 % We try with tha=0
-[P, A0, J0, th0, ~] = InitialConditionsSteady(4*K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
+[P, A0, J0, th0, ~] = InitialConditionsSteady(4*K,eps,H,plt);
 %pause
 %close all 
 
@@ -111,6 +111,7 @@ options = odeset('RelTol',reltol,'AbsTol',abstol);
 %[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
 tic
 [t,y] = ode15s(@coupledPde,tout,y0); 
+% [t,y] = ode15s(@coupledPde2,tout,y0); 
 toc
 %pause
 A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
@@ -125,7 +126,7 @@ u = zeros(size(A));
 u0 = usolutionNoFB(A0,th0);  % Do I even need this guy? 
 u(1,:) = u0; 
 for i=2:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)',L);   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,end),L);   
     
 end
 disp('Completed Round 1')
@@ -139,8 +140,8 @@ Atop  = [ D*ones(N,1), ...
 tmpA =  (Atop + [Atop(:,2:end), ones(N,1)])/2; % extract A at the edges 
 Abot = ones(N,K); 
 Afull =    [tmpA, Abot];  
-ufull  = [ u , ...
-       uf.*ones(N,1) ];
+%ufull  = [ u , ...
+ %      uf.*ones(N,1) ];
    
 dx = 1/K;
 
@@ -158,12 +159,12 @@ for i = N/numel:(N/numel):N
     plot(Xresc1(i,:),thtop(i,:))
     hold on
     plot(Xresc2(i,:),phi(i,:)) 
-    %pause
+   % pause
     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
 end
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-
+csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
 return
 
 % Round 2 

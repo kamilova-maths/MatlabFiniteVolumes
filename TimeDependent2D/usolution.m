@@ -18,13 +18,14 @@ global P0 K gamma uf St D
     dx = xmax/K;
     % Technically can do this in one line, but I can't figure out how -
     % this gives same results as above so we don't bother changing it
-    temp1 = [0;0;theta];
-    temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
+    temp = theta;
+    %temp = [0;theta];
+    %temp = (temp1(1:end-1)+temp1(2:end) ) /2; 
     tiph= 3*exp(-gamma*temp); 
-    
-    Atmp  = [ D; A ];           % add ghost node to A
-
-    Dx2u = spdiags( [ Atmp(2:end).*tiph(2:end), -(Atmp(1:end-1).*tiph(1:end-1)+Atmp(2:end).*tiph(2:end)), Atmp(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
+    Atmp = A; 
+    %Atmp  = [ D; A ];           % add ghost node to A
+    % Atmp(end) = 1; 
+    Dx2u = spdiags( [ Atmp(2:end).*tiph(2:end), -(Atmp(1:end-1).*tiph(1:end-1)+Atmp(2:end).*tiph(2:end)), Atmp(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K-1, K-1 );
     Dx2u(1,2) = Dx2u(1,2) + Atmp(1).*tiph(1) / dx^2;              % include effect from Neumann BC
     fu   = - St.*(lam.^2).*( Atmp(1:end-1) + Atmp(2:end) )/ 2;
 
@@ -32,6 +33,8 @@ global P0 K gamma uf St D
     
     fu(end)= fu(end) - uf   * Atmp(end)* tiph(end)/dx^2;
     u = Dx2u\fu;
+    
+    u = [u; 1];
 
 
 end

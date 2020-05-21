@@ -22,7 +22,7 @@ Ain = 0.2;
 % % initial solve using easy parameters
 
 solinit = bvpinit(linspace(0,L,100),@(x) [Pin; Ain; 0; Tin]);
-opts = bvpset('RelTol',1e-8,'AbsTol',1e-8);
+opts = bvpset('RelTol',1e-6,'AbsTol',1e-7);
 
 if H==1
     sol = bvp5c(@(x,y) odefun(x,y,eps),@(ya,yb) bcfun(ya,yb,Tin),solinit,opts);
