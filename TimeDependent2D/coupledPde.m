@@ -35,9 +35,10 @@ A(end) = 1;
 u = usolution(A,th,lam(end),1); 
 %tmpA_edge =  (A + [A(2:end);1])/2; % extract A at the edges 
 %lamt = 1+(u(end)-u(end-1))./(1-tmpA_edge(end-1));  % compute lamt with the edges
-lamt = 1+(u(end)-u(end-1))./(A(end)-A(end-1));  % compute lamt with the edges
+%u_edge = (u + [u(2:end);1])/2;
+lamt = 1+(u(end)-u(end-1))./((A(end)-A(end-1)));  % compute lamt with the edges
 tmpU = [ u; uf ] -lamt.*[X; 1] ; % size K+1 x 1 
-%A(end) = 1; 
+
 % add ghost node to A
 tmpA = [D; A; 1]; % extend A by 1
 S = -A.*lamt./(lam); 
@@ -68,14 +69,18 @@ Fw = (Fw(1:end-1) - Fw(2:end) )./(lam(end).* dX);
 %Sw = - (A.*lamt.*thtmp(2:end))./lam  - ...
  %   (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(thtmp(2:end)-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
 Sw = - (A.*lamt.*th)./lam  - ...
-    (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(th-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
+    (2*Bi./(Pe)).*sqrt(A).*(th-tha) + Q(X.*lam(end)).*A;
 
 % HERE, WE WANT TO SOLVE, FROM X=1 TO X=0, 
+% WE TRY TO SOLVE IT FROM XBAR = 0 TO XBAR =1 . WHEN CTRL+Z REMOVES THIS,
+% WE ARE BACK TO THE WORKING PROBLEM WITH DISCONTINUITY - REMEMBER TO
+% CHANGE INPUT I
 % Calculate fluxes for phi
-Xbar = linspace(1,0,K)';
-dXbar = 1/K; 
+Xbar = linspace(0,1,K+1)';
+dXbar = 1/(K+1); 
 %lamt = -lamt; 
-tmpU = lamt.*[1; Xbar] -1; % the scaling of U is outside of the flux function. size K+1 x 1 THIS IS U, FROM X=1 TO X=0  [lamt should be constant anyway]
+tmpU = lamt.*Xbar -1; % the scaling of U is outside of the flux function. size K+1 x 1 THIS IS U, FROM X=1 TO X=0  [lamt should be constant anyway]
+% tmpU = flip(tmpU);
 % Here, phi(1) corresponds to phi at x=1, X=0, and phi(end) corresponds to
 % phi at x=lam, X=1. 
 phi(end) = th(end); 
@@ -99,7 +104,9 @@ Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam(end)).*dXbar) ;
 Fp(end) = Fw(end); % If ( change this, it doesn't matter what phix end is. 
 
 % Calculate source terms
-Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi-tha) + Q(L-flip(Xbar).*(L-lam(end))); 
+phi_edge=([phi(2:end);phi(end)]+phi)/2;
+Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi_edge-tha) + Q(L-(Xbar(1:end-1).*(L-lam(end)))); 
+
 %  plot(Qphi(Xbar))
 %  hold on 
  % Calculate the rhs

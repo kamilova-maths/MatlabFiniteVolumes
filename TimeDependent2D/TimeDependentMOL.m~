@@ -152,29 +152,25 @@ lamt = lam(:,end); % size  N x 1 [column vector]
 
 x = (0:dx:1)';
 [X, T1] = meshgrid(x,t);
-Xresc1 = lamt.*X; 
+Xresc1 = lam(:,100).*X; 
 xbar = linspace(1,0,K)'; 
 [X, T2] = meshgrid(xbar,t);
-Xresc2 = -X.*(L-lamt)+L;
+Xresc2 = -X.*(L-lam(:,100))+L;
 
 numel=10;
 datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [thtop(1,:)'; flip(phi(1,:))']];
 
 figure; 
-plot(Xresc1(1,:),thtop(1,:))
-hold on 
-plot(Xresc2(1,:),flip(phi(1,:)))
-hold on 
 for i = N/numel:(N/numel):N
     plot(Xresc1(i,:),thtop(i,:))
     hold on
-    plot(Xresc2(i,:),flip(phi(i,:))) 
+    plot(Xresc2(i,:),phi(i,:)) 
    % pause
-    %datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
+    datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
 end
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-% csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
+csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
 return
 
 % Round 2 

@@ -29,7 +29,7 @@ global P0 K gamma uf St D
     Dx2u(1,2) = Dx2u(1,2) + Atmp(1).*tiph(1) / dx^2;              % include effect from Neumann BC
     fu   = - St.*(lam.^2).*( Atmp(1:end-1) + Atmp(2:end) )/ 2;
 
-    fu(1) = fu(1) -2*tiph(1)*lam(1)*P0/(3*dx);  % include derivative (again, Neumann BC)
+    fu(1) = fu(1) -2*P0/(dx*lam(1));  % include derivative (again, Neumann BC)
     
     fu(end)= fu(end) - uf   * Atmp(end)* tiph(end)/dx^2;
     u = Dx2u\fu;
