@@ -35,7 +35,7 @@ A(end) = 1;
 u = usolution(A,th,lam(end),1); 
 %tmpA_edge =  (A + [A(2:end);1])/2; % extract A at the edges 
 %lamt = 1+(u(end)-u(end-1))./(1-tmpA_edge(end-1));  % compute lamt with the edges
-%u_edge = (u + [u(2:end);1])/2;
+%u_cell = (u + [u(2:end);1])/2;
 lamt = 1+(u(end)-u(end-1))./((A(end)-A(end-1)));  % compute lamt with the edges
 tmpU = [ u; uf ] -lamt.*[X; 1] ; % size K+1 x 1 
 
@@ -69,7 +69,7 @@ Fw = (Fw(1:end-1) - Fw(2:end) )./(lam(end).* dX);
 %Sw = - (A.*lamt.*thtmp(2:end))./lam  - ...
  %   (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(thtmp(2:end)-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
 Sw = - (A.*lamt.*th)./lam  - ...
-    (2*Bi./(Pe)).*sqrt(A).*(th-tha) + Q(X.*lam(end)).*A;
+    (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(th-tha) + Q(X.*lam(end)).*(([A(2:end);1]+A)/2);
 
 % HERE, WE WANT TO SOLVE, FROM X=1 TO X=0, 
 % WE TRY TO SOLVE IT FROM XBAR = 0 TO XBAR =1 . WHEN CTRL+Z REMOVES THIS,
@@ -91,8 +91,8 @@ FRp = tmphi(2:end  ).*tmpU;
 %tmphi_edge = (phi + [phi(2:end); th(end)])/2;
 %tmphi_edge = (tmphi(1:end-1)+tmphi(2:end))/2;   % extract th at the edges
 %tmphi_edge = [phi(1); tmphi_edge; th(end)]; 
-%phix = (tmphi(3:end) - tmphi(1:end-2))./(2*dXbar);
-phix = derivative(phi,dXbar)'; 
+phix = (tmphi(3:end) - tmphi(1:end-2))./(2*dXbar);
+% phix = derivative(phi,dXbar)'; 
 phix= [0; phix]; % ????? does this make sense?  
 %phix(1) = 0; 
 %phix(end) = (th(end)-tmphi_edge(end-1))/dXbar; 
@@ -101,11 +101,11 @@ Fp = (FLp + FRp + abs(tmpU).*(tmphi(1:end-1) - tmphi(2:end) ) ) / 2 - (phix) ./ 
 % Calculate flux differences
 Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam(end)).*dXbar) ; 
   
-Fp(end) = Fw(end); % If ( change this, it doesn't matter what phix end is. 
+Fp(end) = Fw(end); % If I change this, it doesn't matter what phix end is. 
 
 % Calculate source terms
-phi_edge=([phi(2:end);phi(end)]+phi)/2;
-Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi_edge-tha) + Q(L-(Xbar(1:end-1).*(L-lam(end)))); 
+% phi_edge=([phi(2:end);phi(end)]+phi)/2;
+Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi-tha) + Q(L-(Xbar(1:end-1).*(L-lam(end)))); 
 
 %  plot(Qphi(Xbar))
 %  hold on 

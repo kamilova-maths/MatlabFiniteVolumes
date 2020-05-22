@@ -34,7 +34,7 @@ Bi= ((Ld^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 20; 
+gamma = 10; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -46,7 +46,7 @@ eps = 1e-2;
 % problem 
 N=1000; K=300;
 % end of the domain
-T = 1; L=1.5 ;
+T = 5; L=1.5 ;
 dx = L/K;
 uf = 1; 
 
@@ -173,6 +173,9 @@ for i = N/numel:(N/numel):N
     %datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
 end
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
+top = max(max(abs(th(1,:)-th(end,:))))/max(max(th))
+bottom = max(max(abs(phi(1,:)-phi(end,:))))/max(max(phi))
+
 
 % csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
 return
