@@ -28,8 +28,9 @@ Q = @(x) Qvalue*(x>x1).*(x<x2);    % heat source
 %% We solve everything for the TOP 
 % We extract the necessary vectors 
 
-dX = 1/K;
-X = ( dX:dX:1 )'; % Since we have Dirichlet boundary conditions, we don't need x=0
+dX = 1/(K-1);
+X = linspace(0,1,K+1)'; % Since we have Dirichlet boundary conditions, we don't need x=0
+%dX = 1/(K+1);
 % solve for u
 A(end) = 1; 
 u = usolution(A,th,lam(end),1); 
@@ -37,7 +38,7 @@ u = usolution(A,th,lam(end),1);
 %lamt = 1+(u(end)-u(end-1))./(1-tmpA_edge(end-1));  % compute lamt with the edges
 %u_cell = (u + [u(2:end);1])/2;
 lamt = 1+(1-u(end))./(2*(A(end)-A(end-1)));  % compute lamt with the edges
-tmpU = [ u; uf ] -lamt.*[0; X] ; % size K+1 x 1 
+tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 
 
 % add ghost node to A
 tmpA = [D; A; 1]; % extend A by 1
@@ -70,7 +71,7 @@ Fw = (Fw(1:end-1) - Fw(2:end) )./(lam(end).* dX);
  %   (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(thtmp(2:end)-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
  th_edge = (thtmp(2:end-1) + thtmp(3:end))/2;
 Sw = - (A.*lamt.*th_edge)./lam(end)  - ...
-    (2*Bi./(Pe)).*((([A(2:end);1]+A)/2).^(1/2)).*(th-tha) + Q(X.*lam(end)).*(([A(2:end);1]+A)/2);
+    (2*Bi./(Pe)).*((([A(2:end);1]+A)/2).^(1/2)).*(th-tha) + Q(X(2:end).*lam(end)).*(([A(2:end);1]+A)/2);
 
 % HERE, WE WANT TO SOLVE, FROM X=1 TO X=0, 
 % WE TRY TO SOLVE IT FROM XBAR = 0 TO XBAR =1 . WHEN CTRL+Z REMOVES THIS,
@@ -78,7 +79,7 @@ Sw = - (A.*lamt.*th_edge)./lam(end)  - ...
 % CHANGE INPUT I
 % Calculate fluxes for phi
 Xbar = linspace(0,1,K+1)';
-dXbar = 1/(K+1); 
+dXbar = 1/(K-1); 
 %lamt = -lamt; 
 tmpU = lamt.*Xbar -1; % the scaling of U is outside of the flux function. size K+1 x 1 THIS IS U, FROM X=1 TO X=0  [lamt should be constant anyway]
 %tmpU = flip(tmpU);
@@ -92,7 +93,7 @@ FRp = tmphi(2:end  ).*tmpU;
 %tmphi_edge = (phi + [phi(2:end); th(end)])/2;
 %tmphi_edge = (tmphi(1:end-1)+tmphi(2:end))/2;   % extract th at the edges
 %tmphi_edge = [phi(1); tmphi_edge; th(end)]; 
-phix = (tmphi(3:end) - tmphi(1:end-2))./(2*dXbar);
+phix = (tmphi(3:end) - tmphi(1:end-2))./(2*(1/(K-2)));
 % phix = derivative(phi,dXbar)'; 
 phix= [0; phix]; % ????? does this make sense?  
 %phix(1) = 0; 
@@ -106,7 +107,7 @@ Fp(end) = Fw(end); % If I change this, it doesn't matter what phix end is.
 
 % Calculate source terms
 % phi_edge=([phi(2:end);phi(end)]+phi)/2;
-Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi-tha) + Q(L-(Xbar(1:end-1).*(L-lam(end)))); 
+Sp =  lamt.*phi./(L-lam(end))  - (2*Bi./Pe).*(phi-tha) + Q(L-(Xbar(2:end).*(L-lam(end)))); 
 
 %  plot(Qphi(Xbar))
 %  hold on 

@@ -9,8 +9,8 @@ mu = exp(-gamma*T);
 % viscosity
 Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source
 %He = (A<1);                     % Heaviside function
-%He = 1/2*(1+tanh((1-A)/eps)); % regularised Heaviside function
-He = max(1-exp(-(1-A)/eps),0);% regularised Heaviside function
+He = 1/2*(1+tanh((1-A)/peps)); % regularised Heaviside function
+%He = max(1-exp(-(1-A)/eps),0);% regularised Heaviside function
 dydx = [ St*A;
         (A.*P./(3*mu)).*He;
         Pe*((J./A) - A.*Qfun(x)) + 2*Bi*A.^(1/2).*(T-tha);

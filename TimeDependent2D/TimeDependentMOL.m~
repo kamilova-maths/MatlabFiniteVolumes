@@ -34,17 +34,17 @@ Bi= ((Ld^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 30; 
+gamma = 20; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
 x2 = 6.5/7;
 Q = 1;
-eps = 1e-2;
+eps = 1e-4;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=1000; K=300;
+N=1000; K=600;
 % end of the domain
 T = 1; L=1.5 ;
 dx = L/K;
@@ -57,45 +57,40 @@ H=1;
 plt = 0;
 
 % We try with tha=0
-[P, A0, J0, th0, ~] = InitialConditionsSteady(4*K,eps,H,plt);
-%pause
+[P, A0, J0, th0, xsteady] = InitialConditionsSteady(eps,H,plt);
+% A0 and th0 are actually whatever size Matlab needs them to be, as it uses
+% an adaptive mesh. It is our job to interpolate this accordingly. 
 %close all 
+
 
 
 % Find lam0, then resize both sides with an interpolation (only necessary
 % to do this for the steady state, the conditions on the rest are much
 % nicer because of our rescalings 
-I =    find(A0>0.99999,1,'first');
-x = linspace(0,L,4*K);
-lam0 = x(I);
+A0avg  = (A0(1:end-1)+A0(2:end))/2;   
+th0avg = (th0(1:end-1) + th0(2:end))/2; 
+xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
+I =    find(A0avg>0.99999,1,'first');
 
-A0top = interp1(x(1:I),A0(1:I),linspace(0,x(I),K),'spline'); 
-th0top = interp1(x(1:I),th0(1:I),linspace(0,x(I),K),'spline');
+lam0 = xavg(I);
+
+A0top = interp1(xavg(1:I),A0avg(1:I),linspace(0,xavg(I),K),'pchip'); 
+th0top = interp1(xavg(1:I),th0avg(1:I),linspace(0,xavg(I),K),'pchip'); % pchip and cubic should be exactly the same
 
 %A0bot = ones(size(A0top));
-th0bot = interp1(x(I:end),th0(I:end),linspace(x(I),L,K),'spline');
-
-
+th0bot = interp1(xavg(I:end),th0avg(I:end),linspace(xavg(I),L,K),'pchip');
+ 
 %Initial conditions given by A0, th0
-A0=A0top';
+% A0 = A0top'; 
+A0=A0top + [0, sin(xavg(1:end-2))', 0]; %small perturbation in A
+
+%A0  = A1(2:end,end)+[0; sin(x(1:end-2)');0];
+A0(end) = 1; 
 th0=th0top'; 
-th0bot = flip(th0bot)'; 
-%th0bot = th0bot'; 
-% Obtain initial condition for u
-% viscosity
-%mu = @(th) exp(-gamma*th); % Perhaps discretise this as well, but put a pin in that
-% solve for u
-
-% I = find(A0>0.999,1,'first');
-% x=0:dx:L;
-
-% Note that the steady state we have used has gamma = 40, which is
-% different to what we are doing for constant theta ... This is why it is
-% important that I write the following code leaving the necessary blanks
-% for the mu(theta) portion of the code 
+th0bot = flip(th0bot)'; % We resize to Kx1 and flip the bottom part for theta,
+                        % to match the requirements from coupledPde
 
 
-%u0bot = ones(size(u0top));
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
 y0(2*K+1:3*K) = lam0.*ones(size(A0));  
@@ -124,9 +119,9 @@ phi = y(:,3*K+1:4*K);
 
 % This is the solution to u at the top. 
 u = zeros(size(A));
-u0 = usolutionNoFB(A0,th0);  % Do I even need this guy? 
-u(1,:) = u0; 
-for i=2:N
+for i=1:N
+    % Here A(1,:) is A0, so this should give me the u used for the
+    % calculations inside coupledPde.m
     u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,end),1);   
 end
 disp('Completed Round 1')
@@ -157,8 +152,9 @@ xbar = linspace(1,0,K)';
 [X, T2] = meshgrid(xbar,t);
 Xresc2 = -X.*(L-lamt)+L;
 
+% PLOTTING THETA
 numel=10;
-datamat = [[Xresc1(1,:)'; Xresc2(1,:)'], [thtop(1,:)'; flip(phi(1,:))']];
+datamat1 = [[Xresc1(1,1:5:end)'; Xresc2(1,1:5:end)'], [thtop(1,1:5:end)'; flip(phi(1,1:5:end))']];
 
 figure; 
 plot(Xresc1(1,:),thtop(1,:))
@@ -170,41 +166,50 @@ for i = N/numel:(N/numel):N
     hold on
     plot(Xresc2(i,:),flip(phi(i,:))) 
    % pause
-    datamat = [datamat, [[Xresc1(i,:)';Xresc2(i,:)'], [thtop(i,:)'; flip(phi(i,:))']]];
+    datamat1 = [datamat1, [[Xresc1(i,1:5:end)';Xresc2(i,1:5:end)'], [thtop(i,1:5:end)'; flip(phi(i,1:5:end))']]];
 end
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 top = max(max(abs(th(1,:)-th(end,:))))/max(max(th))
 bottom = max(max(abs(phi(1,:)-phi(end,:))))/max(max(phi))
-csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
+csvwrite('ThetaDiscreteTimestepsgamma20.csv',datamat1); 
 
-numel=10;
-datamat = [[Xresc1(1,:)'; Xresc2(1,:)'], [tmpA(1,:)'; flip(Abot(1,:))']];
+% PLOTTING A
 figure; 
+plot(Xresc1(1,:),tmpA(1,:))
+hold on 
+plot(Xresc2(1,:),Abot(1,:))
+numel=10;
+datamat2 = [[Xresc1(1,1:5:end)'; Xresc2(1,1:5:end)'], [tmpA(1,1:5:end)'; flip(Abot(1,1:5:end))']];
+
 for i = N/numel:(N/numel):N
     plot(Xresc1(i,:),tmpA(i,:))
     hold on
     plot(Xresc2(i,:),Abot(i,:))
-    datamat = [datamat, [[Xresc1(i,:)'; Xresc2(i,:)'], [tmpA(i,:)'; flip(Abot(i,:))']]];
+    datamat2 = [datamat2, [[Xresc1(i,1:5:end)'; Xresc2(i,1:5:end)'], [tmpA(i,1:5:end)'; flip(Abot(i,1:5:end))']]];
 end
-
-csvwrite('ADiscreteTimesteps.csv',datamat); 
-
-
 figure; 
-plot(Xresc1(1,:),u(1,:))
+plot(Xresc1(1,:),[A0top(1,1); A0top(1,:)],'--')
 hold on 
-plot(Xresc1(1,:),thtop(1,:))
-numel=10;
-datamat = [[Xresc1(1,:)'; Xresc2(1,:)'], [ufull(1,:)'; flip(Abot(1,:))']];
+plot(Xresc2(1,:),Abot(1,:))
+
+csvwrite('ADiscreteTimestepsgamma20.csv',datamat2); 
+
+% PLOTTING U
 figure; 
+plot(Xresc1(1,:),ufull(1,:))
+hold on 
+plot(Xresc2(1,:),Abot(1,:))
+numel=10;
+datamat3 = [[Xresc1(1,1:10:end)'; Xresc2(1,1:10:end)'], [ufull(1,1:10:end)'; flip(Abot(1,1:10:end))']];
+
 for i = N/numel:(N/numel):N
     plot(Xresc1(i,:),ufull(i,:))
     hold on
     plot(Xresc2(i,:),Abot(i,:))
-    datamat = [datamat, [[Xresc1(i,:)'; Xresc2(i,:)'], [ufull(i,:)'; flip(Abot(i,:))']]];
+    datamat3 = [datamat3, [[Xresc1(i,1:10:end)'; Xresc2(i,1:10:end)'], [ufull(i,1:10:end)'; flip(Abot(i,1:10:end))']]];
 end
 
-csvwrite('uDiscreteTimesteps.csv',datamat); 
+csvwrite('uDiscreteTimestepsgamma20.csv',datamat3); 
 
 return
 

@@ -1,4 +1,4 @@
-function [P, A, J, Th, x] = InitialConditionsSteady(eps,H,plt)
+function [P, A, J, Th] = InitialConditionsSteady(n,eps,H,plt)
 % 3 October 2018
 
 % Modified version of Ian Hewitt's original code. Matches transfer of
@@ -30,19 +30,23 @@ else
 	sol = bvp5c(@(x,y) odefunNH(x,y,eps),@(ya,yb) bcfun(ya,yb,Tin),solinit,opts);
 end
 
-P  = sol.y(1,:);
-A  = sol.y(2,:);
-J  = sol.y(3,:); 
-Th = sol.y(4,:); 
-x = sol.x; 
-
+%Pinterp  = sol.y(1,:);
+%Ainterp  = sol.y(2,:);
+%Thinterp = sol.y(4,:); 
+Pinterp=interp1(sol.x,sol.y(1,:),linspace(0,L,n),'spline');
+Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n+1),'pchip');
+Thinterp = interp1(sol.x,sol.y(4,:),linspace(0,L,n+1),'pchip');
 %Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n),'spline');
 
 % option #1 - taking the values evaluated at the point
 
+Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
+Thinterp=(Thinterp(1:end-1)+Thinterp(2:end))/2;
 
 % option #2 - taking the values evaluated at the cell
-%uf=1
+%uf=1/Ainterp(end);
+
+Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,L,n));
 
 
 if plt==1
