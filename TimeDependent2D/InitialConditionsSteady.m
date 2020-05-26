@@ -1,4 +1,4 @@
-function [Pinterp, Ainterp, Jinterp, Thinterp,uf] = InitialConditionsSteady(n,eps,H,plt)
+function [Pinterp, Ainterp, Jinterp, Thinterp] = InitialConditionsSteady(n,eps,H,plt)
 % 3 October 2018
 
 % Modified version of Ian Hewitt's original code. Matches transfer of
@@ -39,7 +39,6 @@ Thinterp = interp1(sol.x,sol.y(4,:),linspace(0,L,n+1),'pchip');
 %Ainterp=interp1(sol.x,sol.y(2,:),linspace(0,L,n),'spline');
 
 % option #1 - taking the values evaluated at the point
- uf=1/Ainterp(end);
 
 Ainterp=(Ainterp(1:end-1)+Ainterp(2:end))/2;                % let's recover cell-averages for this
 Thinterp=(Thinterp(1:end-1)+Thinterp(2:end))/2;
@@ -48,7 +47,6 @@ Thinterp=(Thinterp(1:end-1)+Thinterp(2:end))/2;
 %uf=1/Ainterp(end);
 
 Jinterp=interp1(sol.x,sol.y(3,:),linspace(0,L,n));
-%Thinterp=interp1(sol.x,sol.y(4,:),linspace(0,L,n),'spline');
 
 
 if plt==1

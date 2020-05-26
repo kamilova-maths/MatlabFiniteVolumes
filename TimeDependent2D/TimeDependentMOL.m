@@ -34,19 +34,19 @@ Bi= ((Ld^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 10; 
+gamma = 30; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
 x2 = 6.5/7;
 Q = 1;
-eps = 1e-2;
+eps = 1e-3;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 N=1000; K=300;
 % end of the domain
-T = 5; L=1.5 ;
+T = 1; L=1.5 ;
 dx = L/K;
 uf = 1; 
 
@@ -57,7 +57,7 @@ H=1;
 plt = 0;
 
 % We try with tha=0
-[P, A0, J0, th0, ~] = InitialConditionsSteady(4*K,eps,H,plt);
+[P, A0, J0, th0] = InitialConditionsSteady(4*K,eps,H,plt);
 %pause
 %close all 
 
@@ -122,12 +122,12 @@ lam   = y(:,2*K+1:3*K);
 
 phi = y(:,3*K+1:4*K); 
 
+% This is the solution to u at the top. 
 u = zeros(size(A));
-u0 = usolutionNoFB(A0,th0);  % Do I even need this guy? 
-u(1,:) = u0; 
-for i=2:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,end),L);   
-    
+for i=1:N
+    % Here A(1,:) is A0, so this should give me the u used for the
+    % calculations inside coupledPde.m
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,end),1);   
 end
 disp('Completed Round 1')
 
@@ -140,8 +140,8 @@ Atop  = [ D*ones(N,1), ...
 tmpA =  (Atop + [Atop(:,2:end), ones(N,1)])/2; % extract A at the edges 
 Abot = ones(N,K); 
 Afull =    [tmpA, Abot];  
-%ufull  = [ u , ...
- %      uf.*ones(N,1) ];
+ufull  = [ u , ...
+      uf.*ones(N,1) ];
    
 dx = 1/K;
 % we define a vector for lambda(t) [so that I don't get confused with
@@ -157,8 +157,9 @@ xbar = linspace(1,0,K)';
 [X, T2] = meshgrid(xbar,t);
 Xresc2 = -X.*(L-lamt)+L;
 
+% PLOTTING THETA
 numel=10;
-datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [thtop(1,:)'; flip(phi(1,:))']];
+datamat1 = [[Xresc1(1,:)'; Xresc2(1,:)'], [thtop(1,:)'; flip(phi(1,:))']];
 
 figure; 
 plot(Xresc1(1,:),thtop(1,:))
@@ -170,14 +171,47 @@ for i = N/numel:(N/numel):N
     hold on
     plot(Xresc2(i,:),flip(phi(i,:))) 
    % pause
-    %datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
+    datamat1 = [datamat1, [[Xresc1(i,:)';Xresc2(i,:)'], [thtop(i,:)'; flip(phi(i,:))']]];
 end
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 top = max(max(abs(th(1,:)-th(end,:))))/max(max(th))
 bottom = max(max(abs(phi(1,:)-phi(end,:))))/max(max(phi))
+csvwrite('ThetaDiscreteTimesteps.csv',datamat1); 
 
+% PLOTTING A
+figure; 
+plot(Xresc1(1,:),tmpA(1,:))
+hold on 
+plot(Xresc2(1,:),Abot(1,:))
+numel=10;
+datamat2 = [[Xresc1(1,:)'; Xresc2(1,:)'], [tmpA(1,:)'; flip(Abot(1,:))']];
 
-% csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
+for i = N/numel:(N/numel):N
+    plot(Xresc1(i,:),tmpA(i,:))
+    hold on
+    plot(Xresc2(i,:),Abot(i,:))
+    datamat2 = [datamat2, [[Xresc1(i,:)'; Xresc2(i,:)'], [tmpA(i,:)'; flip(Abot(i,:))']]];
+end
+
+csvwrite('ADiscreteTimesteps.csv',datamat2); 
+
+% PLOTTING U
+figure; 
+plot(Xresc1(1,:),ufull(1,:))
+hold on 
+plot(Xresc2(1,:),Abot(1,:))
+numel=10;
+datamat3 = [[Xresc1(1,:)'; Xresc2(1,:)'], [ufull(1,:)'; flip(Abot(1,:))']];
+
+for i = N/numel:(N/numel):N
+    plot(Xresc1(i,:),ufull(i,:))
+    hold on
+    plot(Xresc2(i,:),Abot(i,:))
+    datamat3 = [datamat3, [[Xresc1(i,:)'; Xresc2(i,:)'], [ufull(i,:)'; flip(Abot(i,:))']]];
+end
+
+csvwrite('uDiscreteTimesteps.csv',datamat3); 
+
 return
 
 % Round 2 
@@ -270,7 +304,7 @@ set(gca,'TickLabelInterpreter','latex','fontsize',13)
 % set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
 numel=20;
-datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [thtop(1,:)'; flip(phi(1,:))']];
+datamat = [[Xresc1(1,:)'; Xresc2(1,:)'], [thtop(1,:)'; phi(1,:)']];
 
 figure; 
 for i = N/numel:(N/numel):N

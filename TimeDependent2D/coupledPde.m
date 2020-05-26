@@ -36,8 +36,8 @@ u = usolution(A,th,lam(end),1);
 %tmpA_edge =  (A + [A(2:end);1])/2; % extract A at the edges 
 %lamt = 1+(u(end)-u(end-1))./(1-tmpA_edge(end-1));  % compute lamt with the edges
 %u_cell = (u + [u(2:end);1])/2;
-lamt = 1+(u(end)-u(end-1))./((A(end)-A(end-1)));  % compute lamt with the edges
-tmpU = [ u; uf ] -lamt.*[X; 1] ; % size K+1 x 1 
+lamt = 1+(1-u(end))./(2*(A(end)-A(end-1)));  % compute lamt with the edges
+tmpU = [ u; uf ] -lamt.*[0; X] ; % size K+1 x 1 
 
 % add ghost node to A
 tmpA = [D; A; 1]; % extend A by 1
@@ -68,8 +68,9 @@ Fw = (Fw(1:end-1) - Fw(2:end) )./(lam(end).* dX);
 
 %Sw = - (A.*lamt.*thtmp(2:end))./lam  - ...
  %   (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(thtmp(2:end)-tha) + Q(X*lam(end)).*(([A(2:end);1]+A)/2);
-Sw = - (A.*lamt.*th)./lam  - ...
-    (2*Bi./(Pe)).*sqrt(([A(2:end);1]+A)/2).*(th-tha) + Q(X.*lam(end)).*(([A(2:end);1]+A)/2);
+ th_edge = (thtmp(2:end-1) + thtmp(3:end))/2;
+Sw = - (A.*lamt.*th_edge)./lam(end)  - ...
+    (2*Bi./(Pe)).*((([A(2:end);1]+A)/2).^(1/2)).*(th-tha) + Q(X.*lam(end)).*(([A(2:end);1]+A)/2);
 
 % HERE, WE WANT TO SOLVE, FROM X=1 TO X=0, 
 % WE TRY TO SOLVE IT FROM XBAR = 0 TO XBAR =1 . WHEN CTRL+Z REMOVES THIS,
@@ -80,7 +81,7 @@ Xbar = linspace(0,1,K+1)';
 dXbar = 1/(K+1); 
 %lamt = -lamt; 
 tmpU = lamt.*Xbar -1; % the scaling of U is outside of the flux function. size K+1 x 1 THIS IS U, FROM X=1 TO X=0  [lamt should be constant anyway]
-% tmpU = flip(tmpU);
+%tmpU = flip(tmpU);
 % Here, phi(1) corresponds to phi at x=1, X=0, and phi(end) corresponds to
 % phi at x=lam, X=1. 
 phi(end) = th(end); 
