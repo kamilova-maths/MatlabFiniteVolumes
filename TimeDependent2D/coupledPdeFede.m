@@ -1,5 +1,5 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
-function yt = coupledPde2(t,y)
+function yt = coupledPdeFede(t,y)
 % One vector to two vectors
 global Pe Bi tha L K D uf x1 x2
 
@@ -73,7 +73,7 @@ dXbar = 1/(K-1);						 % NOTE: the first cell of phi is actually the last of the
 Xbar = linspace(dXbar,1,K)'; % similarly here: we start considering unknowns for phi from the following cell 
 
 tmpU = lamt.*Xbar -ones(size(Xbar)); 
-
+tmpU = -tmpU; 
 tmphi = [th(end); phi; phi(end)];% NOTE: similarly, I took the temp value from th (continuity)
 
 % NOTE: it's important (for conservation of stuff) that the flux at the
@@ -103,6 +103,8 @@ Sp =  lamt.*phi./(L-lam)  - (2*Bi./Pe).*(phi-tha) + ...
 %% Alternative continuity of flux
 % FK = Fw(end)-Fp(end); 
 
+Fp(1) = Fw(end);
+Sp(1) = Sw(end); 
 
 %% Assemble RHS
 

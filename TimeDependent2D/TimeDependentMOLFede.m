@@ -65,7 +65,7 @@ options = odeset('RelTol',1.0e-04,'AbsTol',1.0e-04);
 % optionsthtmp = odeset('Mass',M,'RelTol',1e-4,'AbsTol',[1e-4 1e-6 1e-6 1e-4 1e-6]);
 
 tic
-[t,y] = ode15s(@coupledPde2,tout,y0); 
+[t,y] = ode15s(@coupledPdeFede,tout,y0); 
 toc
 
 A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
