@@ -1,5 +1,5 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
-function yt = coupledPde(t,y)
+function yt = coupledPde2(t,y)
 % One vector to two vectors
 global Pe Bi tha L K D uf x1 x2
 
@@ -8,14 +8,13 @@ global Pe Bi tha L K D uf x1 x2
 A = y(1:K); 
 w = y(K+1:2*K); 
 th = w./A; 
-phi = y(2*K+1:3*K);
+phi = y(2*K+1:3*K-1);
 
 % phi is valid for x \in (lambda, 1), that is , X \in (1, 0). note that
 % this is in reverse order. The initial condition is given in this reverse
 % order ! So in theory, I do not need to flip anything, I will just
 % calculate it like this
-lam = y(3*K+1); 
-%FK  = y(3*K+2); 
+lam = y(3*K); 
 
 Qvalue = 1;
 Q = @(x) Qvalue*(x>x1).*(x<x2);    % heat source  
@@ -24,7 +23,7 @@ Q = @(x) Qvalue*(x>x1).*(x<x2);    % heat source
 
 %% Finite volumes for A 
 
-dX = 1/(K-1);
+dX = 1/K; % NOTE: I assume we have K cells per subdomain
 X = linspace(0,1,K+1)'; % Since we have Dirichlet boundary conditions, we don't need x=0
 
 A(end) = 1; 
@@ -48,15 +47,15 @@ Arhs = F./lam+S;
  %% Solve for w at next time step with finite volumes  (semi-implicit, parabolic)
  % Assemble matrices
 % Calculate fluxes for w 
-phi(end) = th(end); 
+
 % Add ghost node to w (and extend by one term)
-tmpw = [0; w; phi(end)]; %
+tmpw = [0; w; phi(1)]; % NOTE: I took the temp value from phi (continuity)
 
 FLw = tmpw(1:end-1).*tmpU; % we use the same velocity as for A
 FRw = tmpw(2:end  ).*tmpU; 
 % Add ghost node to A and ghost node to th (and extend by one term)
 Atmp  = [ D; A];  
-thtmp = [ 0; th; phi(end)];
+thtmp = [ 0; th; phi(1)];% NOTE: I took the temp value from phi (continuity)
 
 % Calculate flux
 Fw = (FLw + FRw - abs(tmpU).*(tmpw(2:end) - tmpw(1:end-1)) ) / 2 +  ...
@@ -70,13 +69,18 @@ Sw = - (w.*lamt)./lam  - ...
 
 %% Solve for phi at next time step with finite volumes  (semi-implicit, parabolic)
 % Calculate fluxes for phi
-Xbar = linspace(1,0,K+1)';
+dXbar = 1/(K-1);						 % NOTE: the first cell of phi is actually the last of theta, so exclude that
+Xbar = linspace(dXbar,1,K)'; % similarly here: we start considering unknowns for phi from the following cell 
 
-dXbar = 1/(K-1); 
 tmpU = lamt.*Xbar -ones(size(Xbar)); 
 
-tmphi = [phi(1); phi; th(end)]; % 
+tmphi = [th(end); phi; phi(end)];% NOTE: similarly, I took the temp value from th (continuity)
 
+% NOTE: it's important (for conservation of stuff) that the flux at the
+% *last* interface of th mathes that of the *first* interface of phi. This
+% seems to work anyway (so probably the way the flux is computed is the
+% same, at the end of the day), but if you want to be extra sure, you
+% probably want to set something like FLp(1) = FRw(end), or so
 FLp = tmphi(1:end-1).*tmpU;
 FRp = tmphi(2:end  ).*tmpU; 
 
@@ -88,18 +92,16 @@ Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam).*dXbar) ;
 
 % Calculate source terms for phi
 Sp =  lamt.*phi./(L-lam)  - (2*Bi./Pe).*(phi-tha) + ...
-    flip(Q(L-(Xbar(2:end).*(L-lam)))); 
+    Q(L-(Xbar(2:end).*(L-lam))); 
 
 
 %% This is what I had set originally
 
 % Continuity of flux
-Fp(end) = Fw(end); 
-Sp(end) = Sw(end); 
+%Fp(end) = Fw(end); 
 
-% Fw(end) = Fp(end); 
-% Sw(end) = Sp(end); 
-
+%% Alternative continuity of flux
+% FK = Fw(end)-Fp(end); 
 
 
 %% Assemble RHS
@@ -119,14 +121,10 @@ At = Arhs;
 yt(1:K)= [At(1:end-1); 0];
 
 %% Impose RHS
-
-% phit(end)= wt(end);
-% wt(end) =0;
-% phit(end) = 0; 
 yt(K+1:2*K) = wt;
-yt(2*K+1:3*K) = phit; 
-yt(3*K+1) = lamt; 
-%yt(3*K+2) = FK; 
+yt(2*K+1:3*K-1) = phit; 
+yt(3*K) = lamt; 
+% yt(3*K+2) = FK; 
 yt = yt'; 
 
 end

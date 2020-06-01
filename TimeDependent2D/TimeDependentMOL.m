@@ -44,7 +44,7 @@ eps = 1e-4;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=1000; K=600;
+N=800; K=300;
 % end of the domain
 T = 1; L=1.5 ;
 dx = L/K;
@@ -94,9 +94,9 @@ th0bot = flip(th0bot)'; % We resize to Kx1 and flip the bottom part for theta,
 
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
-y0(2*K+1:3*K) = lam0.*ones(size(A0));  
+y0(2*K+1:3*K) = th0bot;  
 
-y0(3*K+1:4*K) = th0bot;
+y0(3*K+1) = lam0;
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
@@ -114,9 +114,9 @@ A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
 
 th = y(:,K+1:2*K)./A;
 
-lam   = y(:,2*K+1:3*K);
+phi   = y(:,2*K+1:3*K);
 
-phi = y(:,3*K+1:4*K); 
+lam = y(:,3*K+1); 
 
 % This is the solution to u at the top. 
 u = zeros(size(A));
@@ -248,7 +248,7 @@ end
 
 
 % Abot  = y(:,4*K+1:5*K); % This should just be zeros
-
+return
 
 % We try again but with the achieved steady state from the previous method 
 
@@ -389,6 +389,4 @@ surf(T3,Xresc3,Afull,'LineStyle','none')
 xlabel('$t$','Interpreter','latex')
 ylabel('$x$', 'Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-
 
