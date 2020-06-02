@@ -1,7 +1,7 @@
 % Clear previous files
 clear all 
 close all 
-clc
+
 
 % Parameters shared with other routines (I'm not very sure about this,but
 % let's give it a try)
@@ -35,19 +35,19 @@ Bi= ((Ld^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 20; 
+gamma = 30; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
 x2 = 6.5/7;
 Q = 1;
-eps = 1e-4;
+eps = 1e-6;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=800; K=300;
+N=500; K=300;
 % end of the domain
-T = 3; L=1.5 ;
+T = 5; L=1.5 ;
 dx = L/K;
 uf = 1; 
 
@@ -86,7 +86,7 @@ lam0 = lam0steady;
 u0steady = usolution(A0topsteady',th0topsteady',lam0steady,1);   
 
 
-A0 = (1-D).*linspace(0,1,K)'+D; 
+A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
 th0 = zeros(K,1); 
 % th0bot = sin(((linspace(lam0,L,K)-lam0).*pi)/(2.*L))';
 th0bot = zeros(K,1); 
@@ -103,10 +103,10 @@ y0(3*K+1) = lam0;
 tout = linspace(0,T,N);
 
 % ODE integration 
-reltol = 1.0e-04; abstol = 1.0e-04;
+reltol = 1.0e-06; abstol = 1.0e-06;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
 tic
-[t,y] = ode15s(@coupledPde2,tout,y0); 
+[t,y] = ode15s(@coupledPde,tout,y0); 
 toc
 
 A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
@@ -195,7 +195,7 @@ hold on
 plot(Xresc1(1,:),[D,A0topsteady],'--') 
 %plot(Xresc1(1,:),[Atop(1,1); Atop(1,:)],'--')
 
-
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 csvwrite('ADiscreteTimestepsgamma20.csv',datamat2); 
 
 % PLOTTING U
@@ -215,7 +215,15 @@ end
 hold on 
 plot(Xresc1(1,:),[u0steady; uf],'--')
 csvwrite('uDiscreteTimestepsgamma20.csv',datamat3); 
-
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
 % Compare with real steady state 
 
+figure;
+plot(Xresc1(end,:),ufull(end,:))
+hold on 
+plot(Xresc2(end,:),Abot(end,:))
+hold on 
+plot(Xresc1(1,:),[u0steady; uf],'--')
+
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
  

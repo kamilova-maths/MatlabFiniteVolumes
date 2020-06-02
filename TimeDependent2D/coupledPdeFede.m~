@@ -97,7 +97,7 @@ Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam).*dXbar) ;
 
 % Calculate source terms for phi
 Sp =  lamt.*phi./(L-lam)  - (2*Bi./Pe).*(phi-tha) + ...
-    flip(Q(L-(Xbar(2:end).*(L-lam)))); 
+    flip(Q(L-(Xbar(2:end).*(L-lam))); 
 
 
 

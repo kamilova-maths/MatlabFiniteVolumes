@@ -3,12 +3,9 @@ close all
 clc
 
 
-
 %% COMPUTE STEADY STATE
 % Define parameters
-% Parameters shared with other routines (alternatively you can compute them
-% separately with the dimensional parameters) 
-
+% Parameters shared with other routines 
 global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q
 Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
 gamma = 20;  x1 = 5/7; x2 = 6.5/7; Q = 1; uf = 1; 
@@ -21,53 +18,61 @@ N=800;
 K=300;
 
 % end of the domain
-T = 3; L=1.5 ;
+T = 2; L=1.5 ;
 
-method = 'calculate';
-switch method
-% Import steady state
-    case 'import'
-        data = csvread('InitialConditionsK300.csv');
 
-        A0steady = data(1:K); 
+switch 
+% Import steady state 
+data = csvread('InitialConditionsK300.csv');
 
-        th0steady=data(K+1:2*K); 
-        th0botsteady = data(2*K+1:3*K);
-        lam0steady = data(3*K+1) ; 
-    case 'calculate'
-        
+A0steady = data(1:K); 
+
+th0steady=data(K+1:2*K); 
+th0botsteady = data(2*K+1:3*K);
+lam0steady = data(3*K+1) ; 
+
 % Calculate steady state 
-        % Do you want the Heaviside? (Yes, you do). 
-        H=1;
+H=1;
 
-        % Plots for steady state - 1 , no plots for steady state - 0
-        plt = 0;
-        eps = 1e-4;
+% Plots for steady state - 1 , no plots for steady state - 0
+plt = 0;
+eps = 1e-4;
 
-        [Psteady, A0steady, J0steady, th0steady, xsteady] = InitialConditionsSteady(eps,H,plt);
-        % A0 and th0 are actually whatever size Matlab needs them to be, as it uses
-        % an adaptive mesh. It is our job to interpolate this accordingly. 
-        %close all 
+[Psteady, A0steady, J0steady, th0steady, xsteady] = InitialConditionsSteady(eps,H,plt);
+% A0 and th0 are actually whatever size Matlab needs them to be, as it uses
+% an adaptive mesh. It is our job to interpolate this accordingly. 
+%close all 
 
-       % Find lam0, then resize both sides with an interpolation (only necessary
-        % to do this for the steady state, the conditions on the rest are much
-        % nicer because of our rescalings 
-        A0avg  = (A0steady(1:end-1)+A0steady(2:end))/2;   
-        th0avg = (th0steady(1:end-1) + th0steady(2:end))/2; 
-        xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
-        I =    find(A0avg>0.99999,1,'first');
 
-        lam0steady = xavg(I);
 
-        A0steady = interp1(xavg(1:I),A0avg(1:I),linspace(0,xavg(I),K)','pchip'); 
-        th0steady = interp1(xavg(1:I),th0avg(1:I),linspace(0,xavg(I),K)','pchip'); % pchip and cubic should be exactly the same
+% Find lam0, then resize both sides with an interpolation (only necessary
+% to do this for the steady state, the conditions on the rest are much
+% nicer because of our rescalings 
+A0avg  = (A0steady(1:end-1)+A0steady(2:end))/2;   
+th0avg = (th0steady(1:end-1) + th0steady(2:end))/2; 
+xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
+I =    find(A0avg>0.99999,1,'first');
 
-        th0botsteady = interp1(xavg(I:end),th0avg(I:end),linspace(xavg(I),L,K)','pchip');
-end
+lam0steady = xavg(I);
+
+A0topsteady = interp1(xavg(1:I),A0avg(1:I),linspace(0,xavg(I),K),'pchip'); 
+th0topsteady = interp1(xavg(1:I),th0avg(1:I),linspace(0,xavg(I),K),'pchip'); % pchip and cubic should be exactly the same
+
+%A0bot = ones(size(A0top));
+th0botsteady = interp1(xavg(I:end),th0avg(I:end),linspace(xavg(I),L,K),'pchip');
+
 
 %% START FROM HERE WHEN YOU HAVE ALREADY CALCULATED STEADY STATE 
 
-% Initial conditions 
+% Use steady state as initial condition (should show no change)
+% 
+% y0(1:K) = A0steady;
+% y0(1+K:2*K) = A0steady.*th0steady;
+% y0(2*K+1:3*K) = flip(th0botsteady);		%must flip since th0bot is stored in reverse order
+% y0(3*K+1) = lam0steady; 
+
+% Use easier initial conditions (should tend to steady state) 
+
 
 A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
 th0 = zeros(K,1); 
@@ -98,7 +103,7 @@ phi   = y(:,2*K+1:3*K);
 
 lam = y(:,3*K+1); 
 
-% We calculate u with the solution for A, th and lam
+% We calculate u with the solutuon for A, th and lam
 u = zeros(size(A));
 for i=1:N
     u(i,:) = usolutionFede(A(i,:)',th(i,:)',lam(i),1);   
@@ -132,7 +137,7 @@ for i = N/numel:(N/numel):N
 end
 % set(gca,'TickLabelInterpreter','latex','fontsize',13)
 hold on 
-plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))],[th0steady; th0botsteady]','--')
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))],[th0steady; flip(th0botsteady)]','--')
 title('Temperature')
 
 % return 
@@ -189,8 +194,7 @@ for i = N/numel:(N/numel):N
 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)', '--'), axis([0 L 0 (max(max(uint))+0.1)]);
 	hold off
 	ylabel('Velocity')
-	%pause(T/N)
-    pause(1)
+	pause(T/N)
 end
 
 
