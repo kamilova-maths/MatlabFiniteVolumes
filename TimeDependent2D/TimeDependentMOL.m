@@ -1,18 +1,20 @@
 % Clear previous files
-clear all 
+close all 
+clear all
 clc
 
-% Parameters shared with other routines (I'm not very sure about this,but
-% let's give it a try)
-global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q
 
+%% COMPUTE STEADY STATE
 % Define parameters
-% Data to use 
+% Parameters shared with other routines (alternatively you can compute them
+% separately with the dimensional parameters) 
+
+global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
 c= 900; % Fitt and Howell
-Ld=7; % Temperature Profiles in Soderberg Electrodes
+Ldim=7; % Temperature Profiles in Soderberg Electrodes
 uc = 10^-5; %Bergstrom approximation
 R0=0.5;
 R1=1; 
@@ -24,13 +26,15 @@ h = 7;
 
 %Defining non-dimensional parameters
 % Peclet number
-Pe = (rho*c*uc*Ld)/(k);
-epsilon=R1/Ld;
-St=(rho*g*Ld^2)/(uc*mu0);
-P0 = (10000*Ld)/((R1^2)*uc*mu0);
+Pe = (rho*c*uc*Ldim)/(k);
+epsilon=R1/Ldim;
+St=(rho*g*Ldim^2)/(uc*mu0);
 
-DeltaT = (Qc*Ld)/(rho*c*uc);
-Bi= ((Ld^2)*h)/(k*R1); 
+P0 = (10000*Ldim)/((R1^2)*uc*mu0);
+Bi= ((Ldim^2)*h)/(k*R1); 
+DeltaT = (Qc*Ldim)/(rho*c*uc);
+%DeltaT = (Qc*Ldim)/(Bi*rho*c*uc); 
+
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
@@ -42,74 +46,89 @@ x2 = 6.5/7;
 Q = 1;
 eps = 1e-4;
 
+uf = 1; 
+% Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
+% gamma = 30;  x1 = 5/7; x2 = 6.5/7; Q = 1; uf = 1; 
+
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=800; K=300;
+% Discretisation in t
+N=800; 
+% Discretisation in x
+K=300;
+
 % end of the domain
-T = 1; L=1.5 ;
-dx = L/K;
-uf = 1; 
+T = 3; L=1.5 ; 
 
-% We add the heaviside with H=1, and we remove it with H=0. 
-H=1;
+method = 'calculate';
+switch method
+% Import steady state
+    case 'import'
+        data = csvread('InitialConditionsK300.csv');
 
-% Plots for steady state - 1 , no plots for steady state - 0
-plt = 0;
+        A0steady = data(1:K); 
 
-% We try with tha=0
-[P, A0, J0, th0, xsteady] = InitialConditionsSteady(eps,H,plt);
-% A0 and th0 are actually whatever size Matlab needs them to be, as it uses
-% an adaptive mesh. It is our job to interpolate this accordingly. 
-%close all 
+        th0steady=data(K+1:2*K); 
+        th0botsteady = data(2*K+1:3*K);
+        lam0steady = data(3*K+1) ; 
+        u0steady = 1./A0steady;
+    case 'calculate'
+        
+% Calculate steady state 
+        % Do you want the Heaviside? (Yes, you do). 
+        H=1;
 
+        % Plots for steady state - 1 , no plots for steady state - 0
+        plt = 0;
+        eps = 1e-4;
 
+        [Psteady, A0steady, J0steady, th0steady, xsteady] = InitialConditionsSteady(eps,H,plt);
+        % A0 and th0 are actually whatever size Matlab needs them to be, as it uses
+        % an adaptive mesh. It is our job to interpolate this accordingly. 
+        %close all 
 
-% Find lam0, then resize both sides with an interpolation (only necessary
-% to do this for the steady state, the conditions on the rest are much
-% nicer because of our rescalings 
-A0avg  = (A0(1:end-1)+A0(2:end))/2;   
-th0avg = (th0(1:end-1) + th0(2:end))/2; 
-xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
-I =    find(A0avg>0.99999,1,'first');
+       % Find lam0, then resize both sides with an interpolation (only necessary
+        % to do this for the steady state, the conditions on the rest are much
+        % nicer because of our rescalings 
+        A0avg  = (A0steady(1:end-1)+A0steady(2:end))/2;   
+        th0avg = (th0steady(1:end-1) + th0steady(2:end))/2; 
+        xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
+        I =    find(A0avg>0.99999,1,'first');
 
-lam0 = xavg(I);
+        lam0steady = xavg(I);
 
-A0top = interp1(xavg(1:I),A0avg(1:I),linspace(0,xavg(I),K),'pchip'); 
-th0top = interp1(xavg(1:I),th0avg(1:I),linspace(0,xavg(I),K),'pchip'); % pchip and cubic should be exactly the same
+        A0steady = interp1(xavg(1:I),A0avg(1:I),linspace(0,xavg(I),K)','pchip'); 
+        th0steady = interp1(xavg(1:I),th0avg(1:I),linspace(0,xavg(I),K)','pchip'); % pchip and cubic should be exactly the same
 
-%A0bot = ones(size(A0top));
-th0bot = interp1(xavg(I:end),th0avg(I:end),linspace(xavg(I),L,K),'pchip');
- 
-%Initial conditions given by A0, th0
-% A0 = A0top'; 
-xtemp = linspace(0,1,K);
-A0=(A0top + [0, sin(xtemp(1:end-2)), 0])'; %small perturbation in A
+        th0botsteady = interp1(xavg(I:end),th0avg(I:end),linspace(xavg(I),L,K)','pchip');
+        u0steady = 1./A0steady;
+end
 
-%A0  = A1(2:end,end)+[0; sin(x(1:end-2)');0];
-A0(end) = 1; 
-th0=th0top'; 
-th0bot = flip(th0bot)'; % We resize to Kx1 and flip the bottom part for theta,
-                        % to match the requirements from coupledPde
+%% START FROM HERE WHEN YOU HAVE ALREADY CALCULATED STEADY STATE 
+
+% Initial conditions 
+
+A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
+th0 = zeros(K,1); 
+th0bot = zeros(K,1); 
 
 
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
-y0(2*K+1:3*K) = th0bot;  
+y0(2*K+1:3*K) = flip(th0bot);		%must flip since th0bot is stored in reverse order
+y0(3*K+1) = lam0steady; 
 
-y0(3*K+1) = lam0;
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
-% ODE integration 
-reltol = 1.0e-04; abstol = 1.0e-04;
-options = odeset('RelTol',reltol,'AbsTol',abstol);
-%[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
+%% ODE integration 
+options = odeset('RelTol',1.0e-04,'AbsTol',1.0e-04);
+
 tic
 [t,y] = ode15s(@coupledPde,tout,y0); 
-% [t,y] = ode15s(@coupledPde2,tout,y0); 
 toc
-%pause
+
 A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
 
 th = y(:,K+1:2*K)./A;
@@ -118,275 +137,123 @@ phi   = y(:,2*K+1:3*K);
 
 lam = y(:,3*K+1); 
 
-% This is the solution to u at the top. 
+% We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
-    % Here A(1,:) is A0, so this should give me the u used for the
-    % calculations inside coupledPde.m
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,end),1);   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1);   
 end
-disp('Completed Round 1')
 
+% We add the Dirichlet boundary conditions 
 thtop = [ zeros(N,1), ...
        th         ];
-  
-Atop  = [ D*ones(N,1), ...
-       A           ];
-   
-tmpA =  (Atop + [Atop(:,2:end), ones(N,1)])/2; % extract A at the edges 
-Abot = ones(N,K); 
-Afull =    [tmpA, Abot];  
-ufull  = [ u , ...
-      uf.*ones(N,1) ];
-   
-dx = 1/K;
-% we define a vector for lambda(t) [so that I don't get confused with
-% matrices]. Recall that lambda only depends on t, so it is constant for
-% each x
 
-lamt = lam(:,end); % size  N x 1 [column vector]
+Acel = [ A, ones(N,K)];														% A (cell values)
+Aint = ([D*ones(N,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
 
-x = (0:dx:1)';
-[X, T1] = meshgrid(x,t);
-Xresc1 = lamt.*X; 
-xbar = linspace(1,0,K)'; 
-[X, T2] = meshgrid(xbar,t);
-Xresc2 = -X.*(L-lamt)+L;
+uint  = [ u , ...
+					uf.*ones(N,K+1) ];
+temp = [th, phi];		% complete temperature profile (theta and phi)
+				
+% We rescale X and Xbar in order to plot. Note that at the top, where we
+% use X, we have K+1 terms, whereas at the bottom, where we use Xbar, we
+% have K terms
+
+xint = linspace(0,1,K+1)';
+xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 
 % PLOTTING THETA
-numel=10;
-datamat1 = [[Xresc1(1,1:5:end)'; Xresc2(1,1:5:end)'], [thtop(1,1:5:end)'; flip(phi(1,1:5:end))']];
 
-figure; 
-plot(Xresc1(1,:),thtop(1,:))
-hold on 
-plot(Xresc2(1,:),flip(phi(1,:)))
-hold on 
+figure;
+numel = 10; 
+Kindices = [1, 5:5:2*K]; 
+xvector1 = [xcel*lam(1);lam(1) + xcel*(L-lam(1))];
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], temp(1,:)', '--');
+thetadata = [xvector1(Kindices), temp(1,Kindices)'];
+hold on
+
 for i = N/numel:(N/numel):N
-    plot(Xresc1(i,:),thtop(i,:))
-    hold on
-    plot(Xresc2(i,:),flip(phi(i,:))) 
-   % pause
-    datamat1 = [datamat1, [[Xresc1(i,1:5:end)';Xresc2(i,1:5:end)'], [thtop(i,1:5:end)'; flip(phi(i,1:5:end))']]];
+    xvector = [xcel*lam(i);lam(i) + xcel*(L-lam(i))];
+	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)');
+    thetadata = [thetadata, [xvector(Kindices), temp(i,Kindices)']];
 end
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-top = max(max(abs(th(1,:)-th(end,:))))/max(max(th))
-bottom = max(max(abs(phi(1,:)-phi(end,:))))/max(max(phi))
-csvwrite('ThetaDiscreteTimestepsgamma20.csv',datamat1); 
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+hold on 
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))],[th0steady; th0botsteady]','--')
+thsteady = [th0steady; th0botsteady];
+thetadata = [thetadata, [xvector1(Kindices), thsteady(Kindices)]];
+title('Temperature')
+% Save data to file
+csvwrite('ThetaDiscreteTimestepsgamma30.csv',thetadata); 
 
+% return 
+% IF you want to see the other solutions, remove the return. 
 % PLOTTING A
 figure; 
-plot(Xresc1(1,:),tmpA(1,:))
-hold on 
-plot(Xresc2(1,:),Abot(1,:))
-numel=10;
-datamat2 = [[Xresc1(1,1:5:end)'; Xresc2(1,1:5:end)'], [tmpA(1,1:5:end)'; flip(Abot(1,1:5:end))']];
-
+Adata = [xvector1(Kindices), Acel(1,Kindices)'];
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--');
+	hold on
 for i = N/numel:(N/numel):N
-    plot(Xresc1(i,:),tmpA(i,:))
-    hold on
-    plot(Xresc2(i,:),Abot(i,:))
-    datamat2 = [datamat2, [[Xresc1(i,1:5:end)'; Xresc2(i,1:5:end)'], [tmpA(i,1:5:end)'; flip(Abot(i,1:5:end))']]];
+    xvector = [xcel*lam(i);lam(i) + xcel*(L-lam(i))];
+	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)');
+    Adata = [Adata, [xvector(Kindices), Acel(i,Kindices)']];
 end
-figure; 
-plot(Xresc1(1,:),[A0top(1,1); A0top(1,:)],'--')
-hold on 
-plot(Xresc2(1,:),Abot(1,:))
-
-csvwrite('ADiscreteTimestepsgamma20.csv',datamat2); 
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))],[A0steady; ones(K,1)]','--')
+Asteady = [A0steady; ones(K,1)];
+Adata = [Adata, [xvector1(Kindices), Asteady(Kindices)]];
+title('Area')
+% Save data to file
+csvwrite('ADiscreteTimestepsgamma30.csv',Adata); 
 
 % PLOTTING U
 figure; 
-plot(Xresc1(1,:),ufull(1,:))
-hold on 
-plot(Xresc2(1,:),Abot(1,:))
-numel=10;
-datamat3 = [[Xresc1(1,1:10:end)'; Xresc2(1,1:10:end)'], [ufull(1,1:10:end)'; flip(Abot(1,1:10:end))']];
-
+plot([xint*lam(1);lam(1) + xint(2:end)*(L-lam(1))], uint(1,:)', '--');
+udata = [xvector1(Kindices), uint(1,Kindices)'];
+hold on
 for i = N/numel:(N/numel):N
-    plot(Xresc1(i,:),ufull(i,:))
-    hold on
-    plot(Xresc2(i,:),Abot(i,:))
-    datamat3 = [datamat3, [[Xresc1(i,1:10:end)'; Xresc2(i,1:10:end)'], [ufull(i,1:10:end)'; flip(Abot(i,1:10:end))']]];
+    xvector = [xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))];
+	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)');
+    udata = [udata, [xvector(Kindices), uint(i,Kindices)']];
 end
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))],[u0steady; ones(K,1)]','--')
+usteady = [u0steady; ones(K,1)];
+udata = [udata, [xvector1(Kindices), usteady(Kindices)]]; 
+title('Velocity')
+% Save data to file
+csvwrite('uDiscreteTimestepsgamma30.csv',udata); 
 
-csvwrite('uDiscreteTimestepsgamma20.csv',datamat3); 
-
-return
-
-% Round 2 
-A0  = A(end,:);
-%u0 = u(end,:);
-th0 = th(end,:);
-th0bot = flip( phi(end,:) ); 
-
-y0(1:K) = A0;
-y0(1+K:2*K) = A0.*th0;
-y0(2*K+1:3*K) = lam(end,:);  
-
-y0(3*K+1:4*K) = th0bot;
-% 
-
-tic
-[t,y] = ode15s(@coupledPde,tout,y0); 
-toc
-A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
-
-th = y(:,K+1:2*K)./A;
-
-lam   = y(:,2*K+1:3*K);
-
-phi = y(:,3*K+1:4*K); 
-
-u = zeros(size(A));
-u0 = usolutionNoFB(A0',th0');  % Do I even need this guy? 
-u(1,:) = u0; 
-for i=2:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i,:)', L);   
-    
-end
-
-
-% Abot  = y(:,4*K+1:5*K); % This should just be zeros
-return
-
-% We try again but with the achieved steady state from the previous method 
-
-%% FOR NOW, IGNORE HOW WE OBTAIN THE SOLUTION TO U 
-%% Solve for u at next time step (laplacian)
-%     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th
-%     tiph = ( temp(1:end-1) + temp(2:end) ) / 2;
-
-%thfullT = [ zeros(N,1), ...
-    %   thtop          ];
-   
-thtop = [ zeros(N,1), ...
-       th         ];
-  
-Atop  = [ D*ones(N,1), ...
-       A           ];
-   
-tmpA =  (Atop + [Atop(:,2:end), ones(N,1)])/2; % extract A at the edges 
-Abot = ones(N,K); 
-Afull =    [tmpA, Abot];  
-ufull  = [ u , ...
-       uf.*ones(N,1) ];
-   
-dx = L/K;
-
-x = (0:dx:L)';
-[X, T1] = meshgrid(x,t);
-Xresc1 = [lam(:,1), lam].*X; 
-[X, T2] = meshgrid((dx:dx:L)',t);
-Xresc2 = -X.*(L-lam)+L;
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-% figure;
-% surf(T1,Xresc1,thtop,'LineStyle','none')
-% xlabel('$t$','Interpreter','latex')
-% ylabel('$x$', 'Interpreter','latex')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-
-% figure; 
-% surf(T2,Xresc2,phi,'LineStyle','none')
-% xlabel('$t$','Interpreter','latex')
-% ylabel('$x$', 'Interpreter','latex')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-% 
-% 
-% figure; 
-% surf(T1,Xresc1,thtop,'LineStyle','none')
-% hold on 
-% surf(T2,Xresc2,phi,'LineStyle','none')
-% xlabel('$t$','Interpreter','latex')
-% ylabel('$x$', 'Interpreter','latex')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-numel=20;
-datamat = [[Xresc1(1,:)'; Xresc2(1,:)'], [thtop(1,:)'; phi(1,:)']];
-
+% PLOTTING lambda
 figure; 
+plot(t, lam);
+hold on
+plot([t(1),t(end)], [lam(1),lam(1)]);
+title('lambda')
+xlabel('t')
+
+% video version
+figure('units','normalized','outerposition',[0 0 0.25 1])
 for i = N/numel:(N/numel):N
-    plot(Xresc1(i,:),thtop(i,:))
-    hold on
-    plot(Xresc2(i,:),phi(i,:)) 
-    pause
-    datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [thtop(i,:)'; flip(phi(i,:))']]];
+	subplot(3,1,1)
+	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)'), axis([0 L 0 (max(max(temp))+0.1)]);
+	hold on
+	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], temp(1,:)', '--'), axis([0 L 0 (max(max(temp))+0.1)]);
+	plot([lam(i),lam(i)], [0,max(max(temp))+0.1]);
+	hold off
+	title(strcat('T=',num2str(i*T/N)))
+	ylabel('Temperature')
+	subplot(3,1,2)
+	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)'), axis([0 L 0 (max(max(Acel))+0.1)]);
+	hold on
+	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--'), axis([0 L 0 (max(max(Acel))+0.1)]);
+	hold off
+	ylabel('Area')
+  subplot(3,1,3)
+	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)'), axis([0 L 0 (max(max(uint))+0.1)]);
+	hold on
+	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)', '--'), axis([0 L 0 (max(max(uint))+0.1)]);
+	hold off
+	ylabel('Velocity')
+	pause(T/N)
+    %pause(1)
 end
-%csvwrite('ThetaDiscreteTimesteps.csv',datamat); 
 
-
-
-numel=10;
-datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [tmpA(1,:)'; flip(Abot(1,:))']];
-figure; 
-for i = N/numel:(N/numel):N
-    plot(Xresc1(i,:),tmpA(i,:))
-    hold on
-    plot(Xresc2(i,:),Abot(i,:))
-    datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [tmpA(i,:)'; flip(Abot(i,:))']]];
-end
-% 
-% %csvwrite('ADiscreteTimesteps.csv',datamat); 
-% 
-% numel=10;
-% datamat = [[Xresc1(1,:)'; flip(Xresc2(1,:))'], [ufull(1,:)'; flip(Abot(1,:))']];
-% figure; 
-% for i = N/numel:(N/numel):N
-%     plot(Xresc1(i,:),ufull(i,:))
-%     hold on
-%     plot(Xresc2(i,:),Abot(i,:))
-%     datamat = [datamat, [[Xresc1(i,:)';flip(Xresc2(i,:))'], [ufull(i,:)'; flip(Abot(i,:))']]];
-% end
-% csvwrite('uDiscreteTimesteps.csv',datamat);
-% 
-% this is a file that has two columns per timestep, where the first column
-% is the x values and the second one the theta values. In the x and theta
-% values, we have appended both sides onto one vector, so Xcol = Xresc1,
-% Xresc2, and similarly for theta 
-
-
-
-return 
-figure;
-% surf(t,x.*[lam(1,1); lam(:,end)],Atop','LineStyle','none')
-% xlabel('$t$')
-% ylabel('$X$')
-% title('$A$ with MOL','Interpreter','latex')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-% 
-% figure;
-% surf(t,x,thfull','LineStyle','none')
-% xlabel('$t$')
-% ylabel('$x$')
-% title('$\theta$ with MOL','Interpreter','latex')
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-figure;
-surf(t,x,ufull','LineStyle','none')
-xlabel('$t$')
-ylabel('$X$')
-title('$u$ with MOL','Interpreter','latex')
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-plot(t,lam(:,end))
-xlabel('$t$','Interpreter','latex')
-ylabel('$\lambda(t)$','Interpreter','latex')
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-
-datamat = [[t(1,end); t(10:10:end)],[lam(1,end); lam(10:10:end,end)]];
-
-csvwrite('lambdavst.csv',datamat);
-
-figure;
-%surf(T1,Xresc1,Atop,'LineStyle','none')
-surf(T3,Xresc3,Afull,'LineStyle','none')
-
-% hold on
-% Abot = ones(N,K); 
-%surf(T2,Xresc2,Abot,'LineStyle','none')
-xlabel('$t$','Interpreter','latex')
-ylabel('$x$', 'Interpreter','latex')
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
