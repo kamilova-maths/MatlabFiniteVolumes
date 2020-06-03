@@ -131,8 +131,8 @@ A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D;
 th0 = zeros(K,1); 
 th0bot = zeros(K,1); 
 
-%Q = Bi; % can my code cope with that? Even if the steady state code can't. 
-%[Probably not but sort of worth a chance]
+Q = Bi; % can my code cope with that? Even if the steady state code can't. 
+[Probably not but sort of worth a chance]
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
 y0(2*K+1:3*K) = flip(th0bot);		%must flip since th0bot is stored in reverse order

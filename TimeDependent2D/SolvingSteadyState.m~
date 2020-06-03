@@ -33,12 +33,12 @@ p.P0 = (10000*L)/((R1^2)*u*mu0);
 
 % p.DeltaT = (Qc*L)/(rho*c*u);
 
-p.DeltaT = (Qc*k*R1)/(rho*c*u*h*L);
+p.DeltaT = (Qc*L)/(rho*c*u);
 
 p.Bi= ((L^2)*h)/(k*R1); 
 
 
-p.alpha = 20; 
+p.alpha = 50; 
 p.Ta = 0;
 p.Tin = 0;
 p.Pin = 0;

@@ -96,8 +96,9 @@ Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam).*dXbar) ;
 
 % Calculate source terms for phi
 Sp =  lamt.*phi./(L-lam)  - (2*Bi./Pe).*(phi-tha) + ...
-flip((Qfun(L-(((dXbar/2):dXbar:(1-dXbar/2))'.*(L-lam))))); 
-
+    flip(Qfun(L-(((dXbar/2):dXbar:(1-dXbar/2))'.*(L-lam)))); 
+% This flip is because in this part I am computing x (unscaled) from 1 to
+% lambda, so I flip the Q that I get, and that will give me 
 
 
 % This Xbar should be evaluated at the cells too 

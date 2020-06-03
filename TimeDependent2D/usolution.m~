@@ -33,7 +33,7 @@ global P0 K gamma uf St D
     Dx2u = spdiags( [ Atmp(2:end).*tiph(2:end), -(Atmp(1:end-1).*tiph(1:end-1)+Atmp(2:end).*tiph(2:end)), Atmp(1:end-1).*tiph(1:end-1) ] / dx^2, [-1,0,1], K, K );
     Dx2u(1,2) = Dx2u(1,2) + Atmp(1).*tiph(1) / dx^2;              % include effect from Neumann BC
     %fu   = - St.*(lam.^2).*( Atmp(1:end-1) + Atmp(2:end) )/ 2;
-    fu   = - St.*(lam.^2).*Aint(1:end-1);
+    fu   = - St.*(lam.^2).*Aint;
     fu(1) = fu(1) - 2*(lam)*P0/(dx);  % include derivative (again, Neumann BC)
     
     fu(end)= fu(end) - uf   * Atmp(end)* tiph(end)/dx^2;
