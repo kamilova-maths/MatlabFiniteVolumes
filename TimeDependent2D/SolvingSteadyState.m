@@ -31,9 +31,9 @@ p.epsilon=R1/L;
 p.St=(rho*g*L^2)/(u*mu0);
 p.P0 = (10000*L)/((R1^2)*u*mu0);
 
-% p.DeltaT = (Qc*L)/(rho*c*u);
+p.DeltaT = (Qc*L)/(rho*c*u);
 
-p.DeltaT = (Qc*k*R1)/(rho*c*u*h*L);
+% p.DeltaT = (Qc*k*R1)/(rho*c*u*h*L);
 
 p.Bi= ((L^2)*h)/(k*R1); 
 

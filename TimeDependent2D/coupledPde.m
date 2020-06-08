@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
-function yt = coupledPde(~,y)
+function yt = coupledPde(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q
+global Pe Bi tha L K D uf x1 x2 Q P0t
 
 
 %% Extract the values from the vector
@@ -12,6 +12,7 @@ phi = y(2*K+1:3*K);
 lam = y(3*K+1); 
 
 Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source  
+
 %Qth = @(x) Qvalue*(x>x1/lam).*(x<x2/lam);   % heat source
 %Qphi = @(x) Qvalue*(x<((L-x1)./(L-lam))).*(x>((L-x2)./(L-lam)));    % heat source at the bottom
 
@@ -27,7 +28,7 @@ Xbar = linspace(0,1,K+1)';
 
 
 %% Finite volumes for A 
-u = usolution( A, th, lam, 1 );
+u = usolution( A, th, lam, 1, P0t(t) );
 
 lamt = 1+(uf-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 

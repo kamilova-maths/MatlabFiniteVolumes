@@ -9,7 +9,7 @@ clc
 % Parameters shared with other routines (alternatively you can compute them
 % separately with the dimensional parameters) 
 
-global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q
+global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q P0t
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
@@ -58,9 +58,10 @@ N=800;
 K=300;
 
 % end of the domain
-T = 5; L=1.5 ; 
+T = 2; L=1.5 ; 
 
 method = 'calculate';
+
 switch method
 % Import steady state
     case 'import'
@@ -98,19 +99,26 @@ switch method
 
         lam0steady = xsteady(I);
 
-%         A0int   = interp1(xsteady(1:I),A0steady(1:I),linspace(0,xsteady(I),K+1)','pchip'); 
-%         th0int  = interp1(xsteady(1:I),th0steadyfull(1:I),linspace(0,xsteady(I),K+1)','pchip'); % pchip and cubic should be exactly the same
-
-        A0int   = interp1(xsteady,A0steady,linspace(0,L,K+1)','pchip'); 
-        th0int  = interp1(xsteady,th0steadyfull,linspace(0,L,K+1)','pchip'); % pchip and cubic should be exactly the same
-
-        u0steady = 1./A0int; 
+        A0intfull = interp1(xsteady,A0steady,linspace(0,L,K+1)','pchip'); 
+        A0celfull = (A0intfull(1:end-1) + A0intfull(2:end))/2; 
+        A0int   = interp1(xsteady(1:I),A0steady(1:I),linspace(0,xsteady(I),K+1)','pchip'); 
         
-%         phi0int = interp1(xsteady(I+1:end),th0steadyfull(I+1:end),linspace(xsteady(I+1),L,K+1)','pchip');
+        
+        th0intfull = interp1(xsteady,th0steadyfull,linspace(0,L,K+1)','pchip'); % pchip and cubic should be exactly the same
+        th0celfull = (th0intfull(1:end-1) + th0intfull(2:end))/2; 
+        
+        th0int  = interp1(xsteady(1:I),th0steadyfull(1:I),linspace(0,xsteady(I),K+1)','pchip'); % pchip and cubic should be exactly the same
+        
+%         A0int   = interp1(xsteady,A0steady,linspace(0,L,K+1)','pchip'); 
+%         th0int  = interp1(xsteady,th0steadyfull,linspace(0,L,K+1)','pchip'); % pchip and cubic should be exactly the same
+
+
+        
+         phi0int = interp1(xsteady(I+1:end),th0steadyfull(I+1:end),linspace(xsteady(I+1),L,K+1)','pchip');
 %         
         A0cel   = (A0int(1:end-1)+A0int(2:end))/2; % this is  size K x 1  - cells   
         th0cel  = (th0int(1:end-1) + th0int(2:end))/2;  % this size K x 1  -cells 
-        % phi0cel = (phi0int(1:end-1) + phi0int(2:end))/2; % this is size K x1 - cells
+        phi0cel = (phi0int(1:end-1) + phi0int(2:end))/2; % this is size K x1 - cells
         
         % Actually, I should just use the full A0 and th0, as long as I
         % extract lambda correctly... right? This is all just extra effort
@@ -118,33 +126,39 @@ switch method
         % Define the steady states
         A0steady      = A0cel;
         th0steady     = th0cel;
-
+        phi0steady    = phi0cel; 
         
-        
+        A0steadyfull = A0celfull; 
+        u0steadyfull = 1./A0intfull; 
+        th0steadyfull = th0celfull; 
+             
 end
 
 %% START FROM HERE WHEN YOU HAVE ALREADY CALCULATED STEADY STATE 
 
 % Initial conditions 
 
-A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
-th0 = zeros(K,1); 
-th0bot = zeros(K,1); 
+A0 = A0steady; 
+th0 = th0steady; 
+th0bot = phi0steady; 
 
-Q = Bi; % can my code cope with that? Even if the steady state code can't. 
-[Probably not but sort of worth a chance]
+%Q = Bi; % can my code cope with that? Even if the steady state code can't. 
+%[Probably not but sort of worth a chance]
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
-y0(2*K+1:3*K) = flip(th0bot);		%must flip since th0bot is stored in reverse order
-lil = 0.02; 
-y0(3*K+1) = 1.0564+lil; 
+y0(2*K+1:3*K) = th0bot;		%must flip since th0bot is stored in reverse order
+y0(3*K+1) = lam0steady; 
 
+% y0(3*K+1) = 1.0576; 
+% Time Variation in P0
+%P0t = @(t)P0*cos(2*pi*t/0.1234);
+P0t = @(t) P0 + P0*sin(2*pi*t);
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
 %% ODE integration 
-options = odeset('RelTol',1.0e-04,'AbsTol',1.0e-04);
+options = odeset('RelTol',1.0e-06,'AbsTol',1.0e-06);
 
 tic
 [t,y] = ode15s(@coupledPde,tout,y0); 
@@ -161,7 +175,7 @@ lam = y(:,3*K+1);
 % We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1);   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1,P0t(tout(i)));   
 end
 
 % We add the Dirichlet boundary conditions 
@@ -197,14 +211,14 @@ for i = N/numel:(N/numel):N
 	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)');
     thetadata = [thetadata, [xvector(Kindices), temp(i,Kindices)']];
 end
-% set(gca,'TickLabelInterpreter','latex','fontsize',13)
-hold on 
+set(gca,'TickLabelInterpreter','latex','fontsize',13)
+%hold on 
 xcelfull= linspace(0,L,K); 
-plot(xcelfull,th0steady,'--')
-% thsteady = [th0steady; th0botsteady];
+plot(xcelfull,th0steadyfull,'--')
+%thsteady = [th0steady; th0botsteady];
 csvwrite('ThetaDiscreteTimesteps.csv',thetadata); 
 
-thsteady = [xcelfull([1, 5:5:K])', th0steady([1, 5:5:K])]; 
+thsteady = [xcelfull([1, 5:5:K])', th0steadyfull([1, 5:5:K])]; 
 csvwrite('Thetasteady.csv',thsteady);
 
 title('Temperature')
@@ -224,8 +238,8 @@ for i = N/numel:(N/numel):N
 end
 csvwrite('ADiscreteTimesteps.csv',Adata); 
 
-plot(xcelfull,A0steady,'--')
-Asteady = [xcelfull([1, 5:5:K])', A0steady([1, 5:5:K])]; 
+plot(xcelfull,A0steadyfull,'--')
+Asteady = [xcelfull([1, 5:5:K])', A0steadyfull([1, 5:5:K])]; 
 csvwrite('Asteady.csv',Asteady);
 
 title('Area')
@@ -243,11 +257,11 @@ for i = N/numel:(N/numel):N
     udata = [udata, [xvector(Kindices), uint(i,Kindices)']];
 end
 xintfull = linspace(0,L,K+1); 
-plot(xintfull,u0steady,'--')
+%plot(xintfull,u0steadyfull,'--')
 %usteady = [u0steady(1:end-1); ones(K,1)];
 csvwrite('uDiscreteTimesteps.csv',udata); 
 
-usteady = [xintfull', u0steady]; 
+usteady = [xintfull', u0steadyfull]; 
 csvwrite('usteady.csv', usteady); 
 
 title('Velocity')
@@ -259,7 +273,9 @@ figure;
 plot(t, lam);
 csvwrite('lam.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]]);
 hold on
-plot([t(1),t(end)], [lam(1),lam(1)]);
+plot(t,P0t(t)); 
+csvwrite('P0t.csv',[[t(1), P0t(t(1))]; [t(5:5:end), P0t(t(5:5:end))]]); 
+%plot([t(1),t(end)], [lam(1),lam(1)]);
 title('lambda')
 xlabel('t')
 
