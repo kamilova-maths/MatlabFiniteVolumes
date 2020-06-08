@@ -8,7 +8,7 @@ function u = usolution(A,theta,lam,xmax,P0t)
 % OUTPUT: u     : K x 1 vector for u 
 
 
-global P0 K gamma uf St D
+global K gamma uf St D
    
     %% Solve for u at next time step (laplacian)
 %     temp = 3*mu([0;0;th(:,i)]);     % add ghost node to th

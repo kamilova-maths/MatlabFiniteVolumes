@@ -55,66 +55,92 @@ uf = 1;
 % Discretisation in t
 N=800; 
 % Discretisation in x
-K=600;
+K=300;
 
-P0t = @(t)P0; 
 % end of the domain
-T = 5; L=1.5 ; 
+T = 5; L=2 ; 
 
-method = 'calculate';
+method = 'import';
 switch method
 % Import steady state
     case 'import'
-        % Match this K with K 
-        data = csvread('SteadyStateK300.csv');
+        %data = csvread('InitialConditionsK300.csv');
 
-        A0steady = data(1:K); 
+        A0steady = csvread('AsteadytopK300.csv') ; 
 
-        th0steady=  data(K+1:2*K);
-        phi0steady =  data(2*K+1:3*K);
+        th0steady=  csvread('AsteadytopK300.csv'); 
+        th0botsteady =  csvread('AsteadytopK300.csv');
         lam0steady = data(3*K+1) ; 
-        %u0steady = 1./A0steady; % This is not quite accurate, take with a grain of salt. 
+        u0steady = 1./A0steady; % This is not quite accurate, take with a grain of salt. 
         % It's not used for any calculations but it is plotted as a
         % reference when we're too lazy to calculate it again . 
     case 'calculate'
         
-  % Do you want the Heaviside? (Yes, you do). 
-        data = ComputeAndSaveSS(K); 
-        %data = csvread('SteadyStateK300.csv');
+% Calculate steady state 
+        % Do you want the Heaviside? (Yes, you do). 
+        H=1;
 
-        A0steady = data(1:K); 
+        % Plots for steady state - 1 , no plots for steady state - 0
+        plt = 0;
+        eps = 1e-4;
 
-        th0steady=  data(K+1:2*K);
-        phi0steady =  data(2*K+1:3*K);
-        lam0steady = data(3*K+1) ; 
-                     
+        [Psteady, A0steady, J0steady, th0steadyfull, xsteady] = InitialConditionsSteady(eps,H,plt);
+        % A0 and th0 are actually whatever size Matlab needs them to be, as it uses
+        % an adaptive mesh. It is our job to interpolate this accordingly. 
+        %close all 
+
+       % Find lam0, then resize both sides with an interpolation (only necessary
+        % to do this for the steady state, the conditions on the rest are much
+        % nicer because of our rescalings 
+        
+        %xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
+        I =    find(A0steady>0.97, 1,'first');
+
+        lam0steady = xsteady(I);
+
+%         A0int   = interp1(xsteady(1:I),A0steady(1:I),linspace(0,xsteady(I),K+1)','pchip'); 
+%         th0int  = interp1(xsteady(1:I),th0steadyfull(1:I),linspace(0,xsteady(I),K+1)','pchip'); % pchip and cubic should be exactly the same
+
+        A0int   = interp1(xsteady,A0steady,linspace(0,L,K+1)','pchip'); 
+        th0int  = interp1(xsteady,th0steadyfull,linspace(0,L,K+1)','pchip'); % pchip and cubic should be exactly the same
+
+        u0steady = 1./A0int; 
+        
+%         phi0int = interp1(xsteady(I+1:end),th0steadyfull(I+1:end),linspace(xsteady(I+1),L,K+1)','pchip');
+%         
+        A0cel   = (A0int(1:end-1)+A0int(2:end))/2; % this is  size K x 1  - cells   
+        th0cel  = (th0int(1:end-1) + th0int(2:end))/2;  % this size K x 1  -cells 
+        % phi0cel = (phi0int(1:end-1) + phi0int(2:end))/2; % this is size K x1 - cells
+        
+        % Actually, I should just use the full A0 and th0, as long as I
+        % extract lambda correctly... right? This is all just extra effort
+        
+        % Define the steady states
+        A0steady      = A0cel;
+        th0steady     = th0cel;
+
+        
         
 end
-
-return
 
 %% START FROM HERE WHEN YOU HAVE ALREADY CALCULATED STEADY STATE 
 
 % Initial conditions 
 
-% A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
-% th0 = zeros(K,1); 
-% th0bot = zeros(K,1); 
-% 
-% %Q = Bi; % can my code cope with that? Even if the steady state code can't. 
-% %[Probably not but sort of worth a chance]
-% y0(1:K) = A0;
-% y0(1+K:2*K) = A0.*th0;
-% y0(2*K+1:3*K) = flip(th0bot);		%must flip since th0bot is stored in reverse order
-% lil = 0.02; 
-% y0(3*K+1) = 1.0564+lil; 
-y0(1:K) = A0steady;
-y0(1+K:2*K) = A0steady.*th0steady;
-y0(2*K+1:3*K) = phi0steady;		%must flip since th0bot is stored in reverse order
- 
-y0(3*K+1) = lam0steady; 
+A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
+th0 = zeros(K,1); 
+th0bot = zeros(K,1); 
+
+%Q = Bi; % can my code cope with that? Even if the steady state code can't. 
+%[Probably not but sort of worth a chance]
+y0(1:K) = A0;
+y0(1+K:2*K) = A0.*th0;
+y0(2*K+1:3*K) = flip(th0bot);		%must flip since th0bot is stored in reverse order
+lil = 0.02; 
+y0(3*K+1) = 1.0564+lil; 
 
 
+P0t = @(t)P0; 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
@@ -133,10 +159,6 @@ phi   = y(:,2*K+1:3*K);
 
 lam = y(:,3*K+1); 
 
-% Save the solution from here and then import into steady state to see if
-% it actually converges to a steady state
-SS = [A(end,:)'; th(end,:)'; phi(end,:)'; lam(end)]; 
-csvwrite('SteadyStateK300.csv', SS); 
 % We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
@@ -177,14 +199,19 @@ for i = N/numel:(N/numel):N
     thetadata = [thetadata, [xvector(Kindices), temp(i,Kindices)']];
 end
 % set(gca,'TickLabelInterpreter','latex','fontsize',13)
+hold on 
+xcelfull= linspace(0,L,K); 
+plot(xcelfull,th0steady,'--')
 % thsteady = [th0steady; th0botsteady];
 csvwrite('ThetaDiscreteTimesteps.csv',thetadata); 
- 
-%csvwrite('Thetasteady.csv',thsteady);
+
+thsteady = [xcelfull([1, 5:5:K])', th0steady([1, 5:5:K])]; 
+csvwrite('Thetasteady.csv',thsteady);
 
 thsteadytop = temp(N,1:K);
 phisteady = temp(N,K+1:end);
-
+csvwrite('ThetasteadyK300.csv', thsteadytop');
+csvwrite('PhisteadyK300.csv', phisteady');
 
 title('Temperature')
 % Save data to file
@@ -203,13 +230,15 @@ for i = N/numel:(N/numel):N
 end
 csvwrite('ADiscreteTimesteps.csv',Adata); 
 
-
-%Asteadytop = Asteady(1:300);
+plot(xcelfull,A0steady,'--')
+%Asteady = [xcelfull([1, 5:5:K])', A0steady([1, 5:5:K])]; 
+Asteady = [[xcel*lam(N);lam(N) + xcel*(L-lam(N))], Acel(N,:)'];
+csvwrite('Asteady.csv',Asteady);
+ Asteadytop = Asteady(1:300);
 title('Area')
-
 % Save data to file
-%SS = [Asteadytop';thsteadytop';phisteady';lam(end,end)];
-%csvwrite('SteadyStateK300.csv', SS); 
+
+csvwrite('SteadyStateK300.csv', [Asteadytop';thsteadytop';phisteady';lam(end,end)])
 
 % PLOTTING U
 figure; 
@@ -221,8 +250,8 @@ for i = N/numel:(N/numel):N
 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)');
     udata = [udata, [xvector(Kindices), uint(i,Kindices)']];
 end
-%xintfull = linspace(0,L,K+1); 
-%plot(xintfull,u0steady,'--')
+xintfull = linspace(0,L,K+1); 
+plot(xintfull,u0steady,'--')
 %usteady = [u0steady(1:end-1); ones(K,1)];
 csvwrite('uDiscreteTimesteps.csv',udata); 
 
