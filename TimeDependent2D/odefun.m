@@ -1,11 +1,11 @@
 function dydx = odefun(x,y,eps)
 
-global Pe Bi tha gamma St x1 x2 Q 
+global Pe Bi tha Gamma St x1 x2 Q 
 P = y(1,:);
 A = min(y(2,:),1);
 T = y(4,:);
 J = y(3,:);
-mu = exp(-gamma*T);  
+mu = exp(-Gamma*T);  
 % viscosity
 Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source
 %He = (A<1);                     % Heaviside function

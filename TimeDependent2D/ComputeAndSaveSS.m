@@ -75,7 +75,7 @@ y0(3*K+1) = lam0steady;
 tout = linspace(0,T,N);
 
 %% ODE integration 
-options = odeset('RelTol',1.0e-06,'AbsTol',1.0e-06);
+%options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
 
 tic
 [t,y] = ode15s(@coupledPde,tout,y0); 
@@ -92,5 +92,5 @@ lam = y(:,3*K+1);
 % Save the solution from here and then import into steady state to see if
 % it actually converges to a steady state
 SS = [A(end,:)'; th(end,:)'; phi(end,:)'; lam(end)]; 
-csvwrite('SteadyStateK600.csv', SS); 
+csvwrite('SteadyStateK300G30.csv', SS); 
 end

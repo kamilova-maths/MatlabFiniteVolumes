@@ -46,7 +46,6 @@ gamma = 20;
 x1 = 5/7;
 x2 = 6.5/7;
 Q = 1;
-eps = 1e-4;
 
 uf = 1; 
 % Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
@@ -57,7 +56,7 @@ uf = 1;
 % Discretisation in t
 N=800; 
 % Discretisation in x
-K=600;
+K=800;
 
 % end of the domain
 T = 2; L=1.5 ; 
@@ -81,6 +80,8 @@ eps = 1e-4;
 
 %xavg   = (xsteady(1:end-1) + xsteady(2:end))/2;
 I =    find(A0steady>0.97, 1,'first');
+I = I+12; 
+
 
 lam0steady = xsteady(I);
 
@@ -120,7 +121,7 @@ th0steadyfull = th0celfull;
              
 % Compare with new computed state for u
  
-ucomp = usolution(A0steady,th0steady,1.0564,1,P0,phi0steady(1));  
+ucomp = usolution(A0steady,th0steady,1.0564,1,P0);  
 ucomp = [ucomp; uf]; 
 
 plot(linspace(0,1,K+1),u0steady,linspace(0,1,K+1),ucomp)

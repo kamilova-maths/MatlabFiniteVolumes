@@ -46,9 +46,9 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=1000; K=2000;
+N=800; K=300;
 % end of the domain
-T = 1; L= 1 ;
+T = 5; L= 1 ;
 dx = L/K;
 
 % We add the heaviside with H=1, and we remove it with H=0. 
@@ -77,8 +77,11 @@ Aex = (fac/(6*St)).*tan(sqrt(fac).*(x+P0bar)./6).^2 - P0.^2./(6*St)+D ;
 lam0 = lamex(St); 
 % Note that Aex is A evaluated at the nodes. I want to evaluate it at the
 % cells, so I have to perform an averaging, of the form 
+u0 = 1./Aex'; 
 Aex = [D; Aex'];
 A0 = (Aex(1:end-1) + Aex(2:end))./2; 
+
+
 
 % Find lam0, then resize both sides with an interpolation (only necessary
 % to do this for the steady state, the conditions on the rest are much
@@ -89,63 +92,107 @@ A0 = (Aex(1:end-1) + Aex(2:end))./2;
 % lam0 = 1; 
 
 th0 = zeros(size(A0)); 
-uf = 1/A0(end); 
-u0 = usolution(A0,th0,lam0); 
+uf = 1;
+%u0 = 1./A0; 
+%u0 = usolution(A0,th0,lam0,L,P0); 
 
 
-y0(1:K) = A0;
-y0(1+K:2*K) = lam0.*ones(size(A0));
+% We now check the return to steady state 
+y0(1:K) = (1- 1e-2 -D).*linspace(0,1,K)'+D; 
+
+y0(1+K) = 0.8;
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
 % ODE integration 
-reltol = 1.0e-04; abstol = 1.0e-04;
+reltol = 1.0e-04; abstol = 1.0e-06;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
 [t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
 %[t,y] = ode15s(@coupledPde,tout,y0); 
 
 A  = y(:,1:K);
-lam   = y(:,1+K:2*K);
+lam   = y(:,1+K);
 
 %% Solve for u at next time step (laplacian)
 % We construct u from A 
 
-umat = zeros(size(A));
-umat(1,:) = u0; 
-for i=2:N
-    umat(i,:) = usolution(A(i,:)',zeros(size(A(i,:)))',lam(i,:)'); 
+u = zeros(size(A));
+%umat(1,:) = u0; 
+for i=1:N
+    u(i,:) = usolution(A(i,:)',zeros(size(A(i,:)))',lam(i),L,P0); 
 end
 
-Afull  = [ D*ones(N,1), ...
-       A          ];   
+Acel = [ A, ones(N,K)];		
+
+%Afull  = [ D*ones(N,1), ...
+%       A          ];   
    
 % We rescale it as 
 
-   
-ufull  = [ umat , ...
-       uf.*ones(N,1) ];
+uint  = [ u , ...
+		uf.*ones(N,K+1) ];   
    
 dx = 1/K;
 
 x = (0:dx:L)';
-A0 = [D; A0]; 
-figure; 
-plot(x,A0,'--')
-hold on
-plot(x,Afull(100:100:end,:))
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-xlabel('$x$','Interpreter','latex')
-ylabel('$A$','Interpreter','latex')
 % A0 = [D; A0]; 
+% figure; 
+% plot(x,A0,'--')
+% hold on
+% plot(x,Afull(100:100:end,:))
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+% xlabel('$x$','Interpreter','latex')
+% ylabel('$A$','Interpreter','latex')
+
+xint = linspace(0,1,K+1)';
+xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
+xvector1 = [xcel*lam(1);lam(1) + xcel*(L-lam(1))];
 figure; 
-u0 = [u0; uf];
-plot(x,u0,'--')
+numel = 10; 
+Kindices = [1, 5:5:2*K]; 
+
+Adata = [xvector1(Kindices), Acel(1,Kindices)'];
+plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--');
+	hold on
+for i = N/numel:(N/numel):N
+    xvector = [xcel*lam(i);lam(i) + xcel*(L-lam(i))];
+	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)');
+    Adata = [Adata, [xvector(Kindices), Acel(i,Kindices)']];
+end
+csvwrite('Awithlambda1constantmu.csv',Adata); 
+hold on 
+xsteadyint = linspace(0,lam0,K)';
+xsteadycel = linspace(xsteadyint(2)/2,1-xsteadyint(2)/2,K)'; 
+plot(xsteadycel,A0,'--')
+csvwrite('ASteadywithlambda1constantmu.csv', [xsteadycel([1, 5:5:K]), A0([1, 5:5:K])])
+
+% A0 = [D; A0]; 
+
+% Plot it the right way, K
+figure; 
+plot([xint*lam(1);lam(1) + xint(2:end)*(L-lam(1))], uint(1,:)', '--');
+udata = [xvector1(Kindices), uint(1,Kindices)'];
 hold on
-plot(x,ufull(100:100:end,:))
-set(gca,'TickLabelInterpreter','latex','fontsize',13)
-xlabel('$x$','Interpreter','latex')
-ylabel('$u$','Interpreter','latex')
+for i = N/numel:(N/numel):N
+    xvector = [xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))];
+	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)');
+    udata = [udata, [xvector(Kindices), uint(i,Kindices)']];
+end
+plot(linspace(0,lam0,K),u0,'--')
+csvwrite('uwithlambda1constantmu.csv',udata); 
+csvwrite('uSteadywithlambda1constantmu.csv', [xsteadyint([1, 5:5:K]), u0([1, 5:5:K])])
+
+% figure; 
+% xu = linspace(0,L,K+1);
+% %u0 = [u0; uf];
+% plot(xu,ufull(1,:),'--')
+% hold on
+% plot(xu,ufull(100:100:end,:))
+% set(gca,'TickLabelInterpreter','latex','fontsize',13)
+% xlabel('$x$','Interpreter','latex')
+% ylabel('$u$','Interpreter','latex')
+% 
 % figure;
 % surf(t,x,Afull','LineStyle','none')
 % xlabel('$t$')
@@ -162,21 +209,21 @@ ylabel('$u$','Interpreter','latex')
 % 
 
 figure;
-plot(t,lam(:,end))
+plot(t,lam)
 %title('True $\lambda = $')
 xlabel('$t$','Interpreter','latex')
 ylim([0.5 1])
 ylabel('$\lambda(t)$','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 
-return
-valuesmatrix=[x(1:10:end),A0(1:10:end),Afull(100:100:end,1:10:end)'];
+csvwrite('lambdaconstantmu.csv', [t,lam])
+return 
+valuesmatrix=[x(1:10:end),Afull(1,1:10:end)',Afull(100:100:end,1:10:end)',A0(1:10:end)];
 csvwrite('Awithlambda1constantmu.csv',valuesmatrix)
 
-valuesmatrix=[t(1:10:end),lam(1:10:end,end)] ; 
-csvwrite('lambdaconstantmu.csv', valuesmatrix)
 
-valuesmatrix=[x(1:10:end),u0(1:10:end),ufull(100:100:end,1:10:end)'];
+
+valuesmatrix=[xu(1:10:end)',ufull(1,1:10:end)',ufull(100:100:end,1:10:end)',[u0(1:10:end); uf]];
 csvwrite('uwithlambda1constantmu.csv',valuesmatrix)
 
 % figure;
