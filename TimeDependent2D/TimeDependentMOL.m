@@ -10,30 +10,34 @@ clc
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
-global N K T D uf P0t
+global N K T D uf P0t P0
 
 options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
 
 % set to 1 if we want to compare with steady state
-st = 1; 
+st = 0; 
 
 if st == 1 
     % Change filename to match what we want to import 
     data = csvread('SSG96K300.csv');
 end
 
-
+P0t = @(t)P0; 
+%P0t = @(t) P0 + P0*sin(2*pi*t); % base case 
 % Initial conditions
 
 % incon can be steady to check return to steady, or simple, which is just
 % linear A, th =0  everywhere 
 
-incon = 'steady'; 
+incon = 'simple'; 
 
 switch incon
     case 'simple'
 
-        A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
+        %A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
+        
+        A0 = (1- D).*linspace(0,1,K+1)'+D; 
+        A0 = (A0(1:end-1)+A0(2:end))/2; 
         th0 = zeros(K,1); 
         phi0 = zeros(K,1);
         lam0 = 0.7;
@@ -109,5 +113,5 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 
-
 PlottingTimesteps
+%PlottingContours

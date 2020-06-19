@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
-function yt = coupledPde(t,y)
+function yt = coupledPdeWithdPdt(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q P0t
+global Pe Bi tha L K D uf x1 x2 Q St dCdt
 
 
 %% Extract the values from the vector
@@ -9,7 +9,8 @@ A = y(1:K);
 w = y(K+1:2*K); 
 th = w./A; 
 phi = y(2*K+1:3*K);
-lam = y(3*K+1); 
+P = y(3*K+1); 
+lam = y(3*K+2);
 
 Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source  
 
@@ -26,10 +27,19 @@ dXbar = 1/K;
 Xbar = linspace(0,1,K+1)';
 
 
-
 %% Finite volumes for A 
-u = usolution( A, th, lam, 1, P0t(t) );
+u = usolution( A, th, lam, 1, P );
 
+u0t = (lam*dX/(A(1)-D)).*(P/(3));
+%u0t = 4;
+%u0t = u(1);
+%[value, ~, ~] = EventFunction(t);
+Pt = D*St.*(dCdt(t)- u0t);
+% if value == 0 
+%         Pt = Pt + D*St*(1); 
+%         counter = counter+1; 
+% end
+ 
 lamt = 1+(uf-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 
 
@@ -117,7 +127,8 @@ yt(1:K)= At;
 %% Impose RHS
 yt(K+1:2*K) = wt;
 yt(2*K+1:3*K) = phit; 
-yt(3*K+1) = lamt; 
+yt(3*K+1) = Pt; 
+yt(3*K+2) = lamt; 
 yt = yt'; 
 
 end

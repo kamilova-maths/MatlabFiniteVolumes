@@ -6,128 +6,112 @@ clc
 
 %% COMPUTE STEADY STATE
 % Define parameters
-% Parameters shared with other routines (alternatively you can compute them
-% separately with the dimensional parameters) 
 
-global Pe Bi tha N K Gamma P0 St T L D uf x1 x2 Q P0t
+% We define all of the parameters in an external routine for clarity 
+ParametersDefinition
 
-rho= 1.8*10^3; %Bergstrom ; 
-g = 10; 
-c= 900; % Fitt and Howell
-Ldim=7; % Temperature Profiles in Soderberg Electrodes
-uc = 10^-5; %Bergstrom approximation
-R0=0.5;
-R1=1; 
-k = 3; 
-Qc=15000; %Taken very vaguely from Temperature profiles in Soderberg electrodes. 
-mu0=10^10; % given by Bjornar at a reference temperature
-T_in=343; 
-h = 7; 
+global N K T D uf dCdt P0 d counter
 
-%Defining non-dimensional parameters
-% Peclet number
-Pe = (rho*c*uc*Ldim)/(k);
-epsilon=R1/Ldim;
-St=(rho*g*Ldim^2)/(uc*mu0);
-%St = 10; 
-P0 = (10000*Ldim)/((R1^2)*uc*mu0);
-Bi= ((Ldim^2)*h)/(k*R1); 
 
-%DeltaT = (Qc*Ldim)/(Bi*rho*c*uc); 
+% set to 1 if we want to compare with steady state
+st = 1; 
 
-%tha = 0.005; 
-D = (R0^2)/(R1^2); 
-gammaBar = 0.069; 
-Gamma = gammaBar*DeltaT; 
-
-%This is the area of the clamps, taken from Temperature profiles ... 
-x1dim = 5;
-x2dim = 6.5; 
-x1 = x1dim/Ldim;
-x2 = x2dim/Ldim;
-Q0 = Qc*(x2dim - x1dim)/Ldim ; 
-eps = 1e-4;
-%DeltaT = (Qc*Ldim)/(rho*c*uc);
-DeltaT =  (Q0*Ldim)/(rho*c*uc); 
-Q = 1/(x2-x1);
-
-tha = (373 - T_in)/DeltaT ; 
-uf = 1; 
-% Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
-% gamma = 30;  x1 = 5/7; x2 = 6.5/7; Q = 1; uf = 1; 
-
-% Calculating the initial conditions as a solution of the steady state
-% problem 
-% Discretisation in t
-N=800; 
-% Discretisation in x
-K=300;
-
-P0t = @(t)P0; 
-% end of the domain
-T = 5; L=1.5 ; 
-
-options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
-method = 'import';
-switch method
-% Import steady state
-    case 'import'
-        % Match this K with K 
-        data = csvread('SteadyStateG80K300.csv');
-
-        A0steady = data(1:K); 
-
-        th0steady=  data(K+1:2*K);
-        phi0steady =  data(2*K+1:3*K);
-        lam0steady = data(3*K+1) ; 
-        %u0steady = 1./A0steady; % This is not quite accurate, take with a grain of salt. 
-        % It's not used for any calculations but it is plotted as a
-        % reference when we're too lazy to calculate it again . 
-    case 'calculate'
-        
-  % Do you want the Heaviside? (Yes, you do). 
-        data = ComputeAndSaveSS(K); 
-        %data = csvread('SteadyStateK300.csv');
-
-        A0steady = data(1:K); 
-
-        th0steady=  data(K+1:2*K);
-        phi0steady =  data(2*K+1:3*K);
-        lam0steady = data(3*K+1) ; 
-                     
-        
+if st == 1 
+    % Change filename to match what we want to import 
+    data = csvread('SSG125K300Qorg.csv');
 end
 
+%P0t = @(t)P0; 
+%P0t = @(t) P0 + P0*sin(2*pi*t); % base case 
+% Initial conditions
 
-%% START FROM HERE WHEN YOU HAVE ALREADY CALCULATED STEADY STATE 
+% incon can be steady to check return to steady, or simple, which is just
+% linear A, th =0  everywhere 
 
-% Initial conditions 
+incon = 'steady'; 
 
-A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
-th0 = zeros(K,1); 
-phi0 = zeros(K,1); 
+switch incon
+    case 'simple'
 
-%Q = Bi; % can my code cope with that? Even if the steady state code can't. 
-%[Probably not but sort of worth a chance]
+        A0 = (1- D).*linspace(0,1,K+1)'+D; 
+        A0 = (A0(1:end-1)+A0(2:end))/2; 
+        th0 = zeros(K,1); 
+        phi0 = zeros(K,1);
+        lam0 = 0.7;
+        
+    case 'steady'
+        A0 = data(2*K+1:3*K); 
+
+        th0 =  data(4*K+1:5*K);
+        phi0 = data(5*K+1:6*K); 
+    
+        lam0 = data(10*K+3); 
+end
+
 y0(1:K) = A0;
 y0(1+K:2*K) = A0.*th0;
 y0(2*K+1:3*K) = phi0;	%must flip since th0bot is stored in reverse order
-lil = 0.02; 
-y0(3*K+1) = 0.76;  
-% y0(1:K) = A0steady;
-% y0(1+K:2*K) = A0steady.*th0steady;
-% y0(2*K+1:3*K) = phi0steady;		%must flip since th0bot is stored in reverse order
-%  
-% y0(3*K+1) = lam0steady; 
-
+y0(3*K+1) = P0;
+y0(3*K+2) = lam0;  
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
+% We define non-dimensional day d
+d = 86400*uc/Ldim; 
+counter = 0; 
+% We define the addition of cylinders
+
+%dCdt = @(t) 0; 
+% term1 =@(t)0;
+% term2 =@(t)0;
+% term3= @(t)0;
+% for j =1:floor(T/d)
+%    term1 = @(t)term1 + dirac(t-j*d); 
+% end
+% 
+% for j =0:floor(T/(3*d))
+%    term2 = @(t)term2 + dirac(t-(2+3*j)*d); 
+% end
+% 
+% for j = 1:floor(T/(3*d))
+%     term3= @(t)term3 + dirac(t-3*j*d); 
+% end
+
+
+freq = 1/d;
+%dCdt = @(t)term1(t) + term2(t) + term3(t); 
+
+%dCdt =@(t)dirac(t-d)+dirac(t-2*d)+dirac(t-2*d); 
+% vec=ones(size(tout));
+% fac = zeros(floor(T/d),1); 
+% for j=1:floor(T/d)
+%     fac(j) = j - 3*floor((j-1)/3);
+%     vec(j*N/floor(T/d)) = 0 ;
+% end
+% dCdtv = dirac(vec); 
+% % Replace peaks by factors
+% idx = C == Inf; % find Inf
+% dCdtv(idx) = fac;   % You have to be a function! [>.<]
+% WEIRD ATTEMPT - PLEASE CHANGE AFTERWARDS (IF CODE RUNS)
+C1=@(t) 1.5*sawtooth(2*pi*t*8)+1.5; 
+C2=@(t) sawtooth(2*pi*t*4)+1; 
+C1=@(t) sawtooth(2*pi*(t-1/8)*8) + 1; 
+%dCdt = @(t)C1(t) -C2(t) +1; 
+%dCdt = @(t)sawtooth(2*pi*t*8) + 2;
+%dCdt = 0; 
+dCdt = @(t)0.5*sawtooth(2*pi*t*freq) + 0.5; 
+%u0t = 4; 
+%Cdt = derivative(C,T/N);
 %% ODE integration 
 
+%for i=1:floor(T/d)
+%options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06,'Events',@EventFunction);
+options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
+
 tic
-[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0); 
+%[t,y,te,ye,ie] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
+[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
 toc
 
 A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
@@ -136,18 +120,21 @@ th = y(:,K+1:2*K)./A;
 
 phi   = y(:,2*K+1:3*K);
 
-lam = y(:,3*K+1); 
+P = y(:,3*K+1); 
+
+lam = y(:,3*K+2); 
+
+%end
 
 % Save the solution from here and then import into steady state to see if
 % it actually converges to a steady state
-SS = [A(end,:)'; th(end,:)'; phi(end,:)'; lam(end)]; 
 
-csvwrite('SteadyStateG80K300.csv', SS); 
 %% We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1,P0t(tout(i)));   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1,P(i));   
 end
+
 
 % We add the Dirichlet boundary conditions 
 thtop = [ zeros(N,1), ...
@@ -159,39 +146,25 @@ Aint = ([D*ones(N,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
 uint  = [ u , ...
 					uf.*ones(N,K+1) ];
 temp = [th, phi];		% complete temperature profile (theta and phi)
-				
+
+
+xint = linspace(0,1,K+1)';
+xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
+    
+    
+if st==0
+    xvector1 = [xcel*lam(end);lam(end) + xcel*(L-lam(end))];
+    xvector2 = [xint*lam(end);lam(end) + xint(2:end)*(L-lam(end))];
+    SS = [xvector1; Acel(end,:)'; temp(end,:)'; xvector2; uint(end,:)'; lam(end)]; 
+    csvwrite('SSData.csv', SS); 
+    disp('Remember to change the name of the file at the end. Include Gamma and K')
+end
+
 % We rescale X and Xbar in order to plot. Note that at the top, where we
 % use X, we have K+1 terms, whereas at the bottom, where we use Xbar, we
 % have K terms
+% set to 1 if we want to save data in csv file 
+dat = 0; 
 
 PlottingTimesteps
-
-return
-% video version
-figure('units','normalized','outerposition',[0 0 0.25 1])
-for i = N/numel:(N/numel):N
-	subplot(3,1,1)
-	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)'), axis([0 L 0 (max(max(temp))+0.1)]);
-	hold on
-	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], temp(1,:)', '--'), axis([0 L 0 (max(max(temp))+0.1)]);
-	plot([lam(i),lam(i)], [0,max(max(temp))+0.1]);
-	hold off
-	title(strcat('T=',num2str(i*T/N)))
-	ylabel('Temperature')
-	subplot(3,1,2)
-	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)'), axis([0 L 0 (max(max(Acel))+0.1)]);
-	hold on
-	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--'), axis([0 L 0 (max(max(Acel))+0.1)]);
-	hold off
-	ylabel('Area')
-  subplot(3,1,3)
-	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)'), axis([0 L 0 (max(max(uint))+0.1)]);
-	hold on
-	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)', '--'), axis([0 L 0 (max(max(uint))+0.1)]);
-	hold off
-	ylabel('Velocity')
-	pause(T/N)
-    %pause(1)
-end
-
-
+%PlottingContours

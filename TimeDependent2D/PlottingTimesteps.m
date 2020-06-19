@@ -2,7 +2,7 @@
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSG96K300.csv');
+    data = csvread('SSG125K300Qorg.csv');
     x0cel = data(1:2*K);
     
     Asteady = data(2*K+1:4*K); 

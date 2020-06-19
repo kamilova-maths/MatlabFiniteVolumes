@@ -1,0 +1,9 @@
+function [value, isterminal, direction] = EventFunction(t,y)
+    global d dCdt D St
+    value = mod(t,d);
+    if value ==0
+        Pt = Pt + D*St*(1); 
+    end
+    isterminal = 0;
+    direction = 0; 
+end

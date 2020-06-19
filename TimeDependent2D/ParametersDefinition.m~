@@ -8,9 +8,9 @@ uc = 10^-5; %Bergstrom approximation
 R0=0.5;
 R1=1; 
 k = 3; 
-Qc=15000; %Taken very vaguely from Temperature profiles in Soderberg electrodes. 
+%Qc=15000; %Taken very vaguely from Temperature profiles in Soderberg electrodes. 
 %Qc = 3.5607e+03;
-%Qc = 2000/L; 
+Qc = 2000/L; 
 %mu0=10^10; % given by Bjornar at a reference temperature
 mu0 = 4.5E10; 
 T_in= 20 + 273; 
@@ -59,4 +59,4 @@ N=800;
 K=300;
 
 % end of the domain
-T = 1.5; L=1 ; 
+T = 5; L=1 ; 
