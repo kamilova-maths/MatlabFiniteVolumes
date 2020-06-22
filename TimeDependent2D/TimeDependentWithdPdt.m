@@ -58,7 +58,8 @@ y0(3*K+2) = lam0;
 tout = linspace(0,T,N);
 
 % We define non-dimensional day d
-d = 86400*uc/Ldim; 
+d = 86400*uc/Ldim;
+%d = 0.2;
 counter = 0; 
 % We define the addition of cylinders
 
@@ -76,7 +77,16 @@ counter = 0;
 % 
 % for j = 1:floor(T/(3*d))
 %     term3= @(t)term3 + dirac(t-3*j*d); 
+
 % end
+% Cylinder example 
+% cylheight = 0.5; 
+% C(t) =cylheight.*( hvsd(t-d) ) + ;
+% 
+% C(t) =@(t)cylheight.*( heaviside(t-d) + heaviside(t-2*d) + heaviside(t-3*d) + ...
+%     heaviside(t-4*d) + heaviside(t-5*d) + heaviside(t-6*d) + heaviside(t-7*d)); 
+% t= linspace(0,1,100); 
+% plot(t,C(t)); 
 
 
 freq = 1/d;
@@ -94,15 +104,19 @@ freq = 1/d;
 % idx = C == Inf; % find Inf
 % dCdtv(idx) = fac;   % You have to be a function! [>.<]
 % WEIRD ATTEMPT - PLEASE CHANGE AFTERWARDS (IF CODE RUNS)
-C1=@(t) 1.5*sawtooth(2*pi*t*8)+1.5; 
-C2=@(t) sawtooth(2*pi*t*4)+1; 
-C1=@(t) sawtooth(2*pi*(t-1/8)*8) + 1; 
+% C1=@(t) 1.5*sawtooth(2*pi*t*8)+1.5; 
+% C2=@(t) sawtooth(2*pi*t*4)+1; 
+% C1=@(t) sawtooth(2*pi*(t-1/8)*8) + 1; 
 %dCdt = @(t)C1(t) -C2(t) +1; 
 %dCdt = @(t)sawtooth(2*pi*t*8) + 2;
 %dCdt = 0; 
-dCdt = @(t)0.5*sawtooth(2*pi*t*freq) + 0.5; 
+%dCdt = @(t)0.5*sawtooth(2*pi*t*freq) + 0.5; 
 %u0t = 4; 
 %Cdt = derivative(C,T/N);
+
+dCdt =@(t)dirdlt(t-d)+2*dirdlt(t-2*d)+3*dirdlt(t-3*d) + ...
+    dirdlt(4*t-d)+2*dirdlt(t-5*d)+3*dirdlt(t-6*d)+  ...
+    dirdlt(t-7*d)+2*dirdlt(t-8*d); 
 %% ODE integration 
 
 %for i=1:floor(T/d)

@@ -36,15 +36,23 @@ x1dim = 5;
 x2dim = 6.5; 
 x1 = x1dim/Ldim;
 x2 = x2dim/Ldim;
-Q0 = Qc*(x2dim - x1dim)/Ldim ; 
+% Q scale is Q0*Qprime
 eps = 1e-4;
 %DeltaT = (Qc*Ldim)/(rho*c*uc);
-DeltaT =  (Q0*Ldim)/(rho*c*uc); 
+
+%THE Q ADVENTURES ARE NOT QUITE RIGHT YET!
+DeltaT = 280+273-T_in; 
+Qscale = DeltaT*(rho*c*uc)/(Ldim); 
+Q0 = Qscale*(x2dim-x1dim)/Ldim; % alternatively, Q0 can be whatever we make it
+
+%Q0 = Qc*(x2dim - x1dim)/Ldim ; 
+
+% DeltaT =  (Q0*Ldim)/(rho*c*uc); 
 %gammaBar = 0.069; 
 gammaBar = 0.09; 
 Gamma = gammaBar*DeltaT; 
-Q = 1/(x2-x1);
-
+%Q = Ldim/(x2dim - x1dim);
+Q = 1/(x2-x1); 
 tha = (T_a- T_in)/DeltaT; 
 %tha=0;
 uf = 1; 
@@ -54,9 +62,9 @@ uf = 1;
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 % Discretisation in t
-N=800; 
+N=1000; 
 % Discretisation in x
 K=300;
 
 % end of the domain
-T = 1.5; L=1 ; 
+T = 1; L=1 ; 
