@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPdeWithdPdt(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q St dCdt
+global Pe Bi tha L K D uf x1 x2 Q St
 
 
 %% Extract the values from the vector
@@ -30,11 +30,12 @@ Xbar = linspace(0,1,K+1)';
 %% Finite volumes for A 
 u = usolution( A, th, lam, 1, P );
 
-u0t = (lam*dX/(A(1)-D)).*(P/(3));
+u0t = (dX/(A(1)-D)).*(P/(3));
 %u0t = 4;
 %u0t = u(1);
 %[value, ~, ~] = EventFunction(t);
-Pt = D*St.*(dCdt(t)- u0t);
+%Pt = D*St.*(dCdt(t)- u0t);
+Pt = D*St.*(- u0t);
 % if value == 0 
 %         Pt = Pt + D*St*(1); 
 %         counter = counter+1; 

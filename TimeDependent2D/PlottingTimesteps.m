@@ -2,7 +2,7 @@
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSG125K300Qorg.csv');
+    data = csvread('SSG23c1.csv');
     x0cel = data(1:2*K);
     
     Asteady = data(2*K+1:4*K); 
@@ -26,7 +26,7 @@ plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], temp(1,:)', '--');
 thetadata = [xvector1(Kindices), temp(1,Kindices)'];
 hold on
 
-for i = N/numel:(N/numel):N
+for i = floor(N/numel):floor((N/numel)):N
     xvector = [xcel*lam(i);lam(i) + xcel*(L-lam(i))];
 	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)');
     thetadata = [thetadata, [xvector(Kindices), temp(i,Kindices)']];
@@ -56,7 +56,7 @@ figure;
 Adata = [xvector1(Kindices), Acel(1,Kindices)'];
 plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--');
 	hold on
-for i = N/numel:(N/numel):N
+for i = floor(N/numel):floor((N/numel)):N
     xvector = [xcel*lam(i);lam(i) + xcel*(L-lam(i))];
 	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)');
     Adata = [Adata, [xvector(Kindices), Acel(i,Kindices)']];
@@ -84,7 +84,7 @@ figure;
 plot([xint*lam(1);lam(1) + xint(2:end)*(L-lam(1))], uint(1,:)', '--');
 udata = [xvector1(Kindices), uint(1,Kindices)'];
 hold on
-for i = N/numel:(N/numel):N
+for i = floor(N/numel):floor((N/numel)):N
     xvector = [xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))];
 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)');
     udata = [udata, [xvector(Kindices), uint(i,Kindices)']];
@@ -109,9 +109,21 @@ title('Velocity')
 figure; 
 plot(t, lam);
 if dat == 1
-csvwrite('lamG30.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]; [t(end), lam0steady]]);
+csvwrite('lam.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]]);
+%csvwrite('lamG23.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]; [t(end), lam0steady]]);
 end
 title('lambda')
+xlabel('t')
+
+
+% PLOTTING Pt
+figure; 
+plot(t, P);
+if dat == 1
+csvwrite('P.csv',[[t(1), P(1)]; [t(5:5:end), P(5:5:end)]]);
+%csvwrite('PG23.csv',[[t(1), P(1)]; [t(5:5:end), P(5:5:end)]; [t(end), P0]]);
+end
+title('P')
 xlabel('t')
 
 return

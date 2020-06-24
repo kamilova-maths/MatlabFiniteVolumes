@@ -1,9 +1,15 @@
 function [value, isterminal, direction] = EventFunction(t,y)
-    global d dCdt D St
-    value = mod(t,d);
-    if value ==0
-        Pt = Pt + D*St*(1); 
+    global Ldim uc first
+    v1 = mod(t*Ldim/(86400*uc),1);
+    tol1 = 1e-3;
+    tol2 = 1e-2;
+    if abs(first-t)<tol1
+        value = 1; 
+    elseif (abs(1-v1)<tol2 || abs(v1)<tol2) && t>0.1
+       value = 0;
+        else
+       value = 1;
     end
-    isterminal = 0;
-    direction = 0; 
+    isterminal = 1;
+    direction = 0; %now what in the world could this be ?
 end

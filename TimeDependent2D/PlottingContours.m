@@ -42,12 +42,12 @@ print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')
 % PLOTTING lambda
 figure; 
 plot(t, lam);
-csvwrite('lam.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]]);
+csvwrite('lamG23.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]; [t(end), lam0]]);
 hold on
-plot(t,P0t(t)); 
-csvwrite('P0t.csv',[[t(1), P0t(t(1))]; [t(5:5:end), P0t(t(5:5:end))]]); 
+plot(t,P); 
+csvwrite('PG23.csv',[[t(1), P(1)]; [t(5:5:end), P(5:5:end)]; [P(end), P0]]);
 %plot([t(1),t(end)], [lam(1),lam(1)]);
-title('lambda')
+title('lambda and P')
 xlabel('t')
 
 %code to save data 

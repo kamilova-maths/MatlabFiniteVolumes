@@ -1,9 +1,9 @@
-global Pe Bi tha N K Gamma P0 St T L D uf x1 x2 Q
+global Pe Bi tha N K Gamma P0 St T L D uf x1 x2 Q Ldim uc
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
 c= 900; % Fitt and Howell
-Ldim=7; % Temperature Profiles in Soderberg Electrodes
+Ldim=5; % Temperature Profiles in Soderberg Electrodes
 uc = 10^-5; %Bergstrom approximation
 R0=0.5;
 R1=1; 
@@ -23,7 +23,8 @@ Pe = (rho*c*uc*Ldim)/(k);
 epsilon=R1/Ldim;
 St=(rho*g*Ldim^2)/(uc*mu0);
 %St = 10; 
-P0 = (10000*Ldim)/((R1^2)*uc*mu0);
+%P0 = (10000*Ldim)/((R1^2)*uc*mu0);
+%P0=0;
 Bi= ((Ldim^2)*h)/(k*R1); 
 
 
@@ -32,15 +33,13 @@ D = (R0^2)/(R1^2);
 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
-x1dim = 5;
-x2dim = 6.5; 
+x1dim = 5-2;
+x2dim = 6.5-2; 
 x1 = x1dim/Ldim;
 x2 = x2dim/Ldim;
 % Q scale is Q0*Qprime
 eps = 1e-4;
 %DeltaT = (Qc*Ldim)/(rho*c*uc);
-
-%THE Q ADVENTURES ARE NOT QUITE RIGHT YET!
 DeltaT = 280+273-T_in; 
 Qscale = DeltaT*(rho*c*uc)/(Ldim); 
 Q0 = Qscale*(x2dim-x1dim)/Ldim; % alternatively, Q0 can be whatever we make it
@@ -56,6 +55,8 @@ Q = 1/(x2-x1);
 tha = (T_a- T_in)/DeltaT; 
 %tha=0;
 uf = 1; 
+c1dim = 0.5; 
+%c1 = c1dim/c1dim; 
 % Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
 % gamma = 30;  x1 = 5/7; x2 = 6.5/7; Q = 1; uf = 1; 
 
@@ -67,4 +68,5 @@ N=1000;
 K=300;
 
 % end of the domain
-T = 1; L=1 ; 
+T =2; L= 1; 
+P0 = D*St*1; 

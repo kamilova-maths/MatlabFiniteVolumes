@@ -10,7 +10,7 @@ clc
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
-global N K T D uf dCdt P0 d counter
+global N K T D uf P0 d counter first
 
 
 % set to 1 if we want to compare with steady state
@@ -18,7 +18,7 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSG125K300Qorg.csv');
+    data = csvread('SSG23c1.csv');
 end
 
 %P0t = @(t)P0; 
@@ -48,11 +48,6 @@ switch incon
         lam0 = data(10*K+3); 
 end
 
-y0(1:K) = A0;
-y0(1+K:2*K) = A0.*th0;
-y0(2*K+1:3*K) = phi0;	%must flip since th0bot is stored in reverse order
-y0(3*K+1) = P0;
-y0(3*K+2) = lam0;  
 
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
@@ -63,86 +58,76 @@ d = 86400*uc/Ldim;
 counter = 0; 
 % We define the addition of cylinders
 
-%dCdt = @(t) 0; 
-% term1 =@(t)0;
-% term2 =@(t)0;
-% term3= @(t)0;
-% for j =1:floor(T/d)
-%    term1 = @(t)term1 + dirac(t-j*d); 
-% end
-% 
-% for j =0:floor(T/(3*d))
-%    term2 = @(t)term2 + dirac(t-(2+3*j)*d); 
-% end
-% 
-% for j = 1:floor(T/(3*d))
-%     term3= @(t)term3 + dirac(t-3*j*d); 
+%Initialise the variables
+A   = []; 
+th  = [];
+phi = [];
+P   = [];
+lam = []; 
 
-% end
-% Cylinder example 
-% cylheight = 0.5; 
-% C(t) =cylheight.*( hvsd(t-d) ) + ;
-% 
-% C(t) =@(t)cylheight.*( heaviside(t-d) + heaviside(t-2*d) + heaviside(t-3*d) + ...
-%     heaviside(t-4*d) + heaviside(t-5*d) + heaviside(t-6*d) + heaviside(t-7*d)); 
-% t= linspace(0,1,100); 
-% plot(t,C(t)); 
-
-
-freq = 1/d;
-%dCdt = @(t)term1(t) + term2(t) + term3(t); 
-
-%dCdt =@(t)dirac(t-d)+dirac(t-2*d)+dirac(t-2*d); 
-% vec=ones(size(tout));
-% fac = zeros(floor(T/d),1); 
-% for j=1:floor(T/d)
-%     fac(j) = j - 3*floor((j-1)/3);
-%     vec(j*N/floor(T/d)) = 0 ;
-% end
-% dCdtv = dirac(vec); 
-% % Replace peaks by factors
-% idx = C == Inf; % find Inf
-% dCdtv(idx) = fac;   % You have to be a function! [>.<]
-% WEIRD ATTEMPT - PLEASE CHANGE AFTERWARDS (IF CODE RUNS)
-% C1=@(t) 1.5*sawtooth(2*pi*t*8)+1.5; 
-% C2=@(t) sawtooth(2*pi*t*4)+1; 
-% C1=@(t) sawtooth(2*pi*(t-1/8)*8) + 1; 
-%dCdt = @(t)C1(t) -C2(t) +1; 
-%dCdt = @(t)sawtooth(2*pi*t*8) + 2;
-%dCdt = 0; 
-%dCdt = @(t)0.5*sawtooth(2*pi*t*freq) + 0.5; 
-%u0t = 4; 
-%Cdt = derivative(C,T/N);
-
-dCdt =@(t)dirdlt(t-d)+2*dirdlt(t-2*d)+3*dirdlt(t-3*d) + ...
-    dirdlt(4*t-d)+2*dirdlt(t-5*d)+3*dirdlt(t-6*d)+  ...
-    dirdlt(t-7*d)+2*dirdlt(t-8*d); 
 %% ODE integration 
-
-%for i=1:floor(T/d)
-%options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06,'Events',@EventFunction);
-options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
-
+te=0;
+j=0;
+tvec=[];
+first = 0; 
+%fac = [1, 1, 1, 1, 3, 0, 0];
 tic
-%[t,y,te,ye,ie] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
-[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
+
+while (isempty(te)==0)
+    
+    if j==0
+        y0(1:K) = A0;
+        y0(1+K:2*K) = A0.*th0;
+        y0(2*K+1:3*K) = phi0;	%must flip since th0bot is stored in reverse order
+        y0(3*K+1) = P0;
+        y0(3*K+2) = lam0;  
+        tout = linspace(0,T,N);
+    else
+        y0(1:K) = ye(1:K);
+        y0(1+K:2*K) = ye(K+1:2*K) ;
+        y0(2*K+1:3*K) = ye(2*K+1:3*K);
+        %fac = (j+1) - 3*floor((j)/3); 
+        fac=1;
+        y0(3*K+1) = ye(3*K+1)+D*St*(fac); 
+        y0(3*K+2) = ye(3*K+2);  
+        tout = linspace(te,T,N-length(A(:,K))) ;    
+    end
+j=j+1;
+%tout = linspace(te,T,N) ; 
+options = odeset('RelTol',1.0e-09,'AbsTol',1.0e-10,'Events',@EventFunction, ...
+    'InitialStep',1e-6);
+%options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
+
+
+% te - column vector of the times at which events occurred
+% ye - contains the solution value at each of the event times in t.e.
+% ie - contains indices into the vector returned by the event function. The
+% values indicate which event the solver detected
+[t,y,te,ye,ie] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
+%[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
+first = te;
+%The 't' values are given at the rows 
+
+A   = [A; y(:,1:K)]; % This is A from X=0 to X=1 (this is, 0<x<lambda)
+
+th  = [th; y(:,K+1:2*K)./y(:,1:K)];
+
+phi =  [phi; y(:,2*K+1:3*K)];
+
+P   = [ P; y(:,3*K+1)]; 
+ 
+lam = [lam; y(:,3*K+2)]; 
+
+tvec = [tvec; t];
+
+end
+
 toc
-
-A  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
-
-th = y(:,K+1:2*K)./A;
-
-phi   = y(:,2*K+1:3*K);
-
-P = y(:,3*K+1); 
-
-lam = y(:,3*K+2); 
-
-%end
 
 % Save the solution from here and then import into steady state to see if
 % it actually converges to a steady state
-
+t = tvec; 
+N = length(tvec); 
 %% We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
