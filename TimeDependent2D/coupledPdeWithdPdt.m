@@ -31,8 +31,8 @@ u = usolution( A, th, lam, 1, P);
 
 u0t = (lam.*dX/(A(1)-2*D+A(1))).*P/3; % There is a real and distinct possibility that you are the reason for all my troubles
 
-%Pt = D*St.*(uin(t)- u0t);
-Pt = D*St.*(uin(t)- u(1));
+Pt = D*St.*(uin(t)- u0t);
+%Pt = D*St.*(uin(t)- u(1));
 Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  
 %lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges
 lamt = 1+(uf -u(end))/(2*(1-A(end)));  % compute lamt with the edges
@@ -42,8 +42,8 @@ tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1
 %tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
 % add ghost node to A
 
-%tmpA = [2*D-A(1); A; 1]; % extend A by 1
-tmpA = [D; A; 1];
+tmpA = [2*D-A(1); A; 1]; % extend A by 1
+%tmpA = [D; A; 1];
 
 
 S = -A.*lamt./(lam); 

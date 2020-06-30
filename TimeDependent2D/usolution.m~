@@ -7,7 +7,7 @@ function u = usolution(A,theta,lam,xmax,P)
 %         K     : discretisation in x 
 % OUTPUT: u     : K x 1 vector for u 
 
-
+%% D
 global K Gamma St D uf
     % I feel like I am missing one value of u right before this. 
     dx = xmax/(K);
@@ -27,7 +27,8 @@ global K Gamma St D uf
     
     fu   = - St.*(lam.^2).*Aint(1:end-1);
     fu(1) = fu(1) - 2*P*lam/(dx);  % include derivative (again, Neumann BC)
-    %fu(1) = fu(1) - P*lam/(dx);  % include derivative (again, Neumann BC)
+
+    
     fu(end)= fu(end) - uf* Atmp(end)* tiph(end)/dx^2;
     %fu(end)= fu(end) - (1./Aint(end))* Atmp(end-1)* tiph(end-1)/dx^2;
     u = Dx2u\fu;
