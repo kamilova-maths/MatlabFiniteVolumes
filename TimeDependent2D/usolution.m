@@ -13,8 +13,8 @@ global K Gamma St D uf
     dx = xmax/(K);
 	theta = [0;theta];
     tiph = 3*exp(-Gamma*theta);
-    %Atmp = [2*D-A(1); A];
-    Atmp = [A; 1];
+    Atmp = [2*D-A(1); A];
+    %Atmp = [A; 1];
     % Add ghost node to A and ghost node to th (and extend by one term)
     Aint = ([D; A] + [A; 1]) /2; 
     %Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  

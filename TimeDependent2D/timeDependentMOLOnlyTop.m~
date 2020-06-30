@@ -30,8 +30,8 @@ h = 7;
 
 %Defining non-dimensional parameters
 % Peclet number
-Pe  = (rho*c*uc*Ldim)/(k);
-epsilon = R1/Ldim;
+Pe = (rho*c*uc*Ldim)/(k);
+epsilon=R1/Ldim;
 %St=(rho*g*Ldim^2)/(uc*mu0);
 St = 27; 
 %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
@@ -46,15 +46,15 @@ D = (R0^2)/(R1^2);
 % problem 
 N=500; K=400;
 % end of the domain
-T = 10; L= 1 ;
-
+T = 3; L= 1 ;
+dx = L/K;
 
 % We add the heaviside with H=1, and we remove it with H=0. 
 H     = 0;
 Gamma = 0; 
-%uin   = @(t) 1/D; % this is what it should be 
-uin = @(t) 3.9946; % this is what it converges to 
-%uin = @(t) (3.9946).*(1+sin(2*pi*t)); 
+uin   = 1/D; % this is what it should be 
+%uin = 3.9946; % this is what it converges to 
+
 % Plots for steady state - 1 , no plots for steady state - 0
 plt   = 0;
 
@@ -81,14 +81,7 @@ lam0 = lamex(St);
 % Note that Aex is A evaluated at the nodes. I want to evaluate it at the
 % cells, so I have to perform an averaging, of the form 
 u0 = 1./Aex'; 
-uf = 1;
-
-ucalc = usolution(Aex',zeros(size(Aex')),lam0,L,P0);
-
-return
-
-Aex = [Aex'; 1];
-%Aex = [D; Aex'];
+Aex = [D; Aex'];
 A0 = (Aex(1:end-1) + Aex(2:end))./2; 
 
 % I don't solve for theta as this is the constant viscosity case, but I
@@ -97,28 +90,17 @@ A0 = (Aex(1:end-1) + Aex(2:end))./2;
 th0 = zeros(size(A0)); 
 
 % dirichlet condition for u at x=1
+uf = 1;
 
-initial = 'steady';
-switch initial
-    case 'simple'
-        %% AWAY FROM STEADY STATE
-        Ainitial = (1- D).*linspace(0,1,K+1)'+D; 
-        Ainitial = (Ainitial(1:end-1)+Ainitial(2:end))/2; 
-        % We now check the return to steady state 
-        y0(1:K) = Ainitial; 
+% We now check the return to steady state 
+y0(1:K) = (1- 1e-2 -D).*linspace(0,1,K)'+D; 
 
-        y0(1+K) = 0.8;
-        y0(2+K) = P0;
-    case 'steady'
-        %% STEADY STATE
-        y0(1:K) = A0; 
-        y0(1+K) = lam0;
-        y0(2+K) = P0;
-end
-%% ODE integration 
+y0(1+K) = 0.8;
+y0(2+K) = P0;
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
+% ODE integration 
 reltol = 1.0e-04; abstol = 1.0e-06;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
 %[t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
