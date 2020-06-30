@@ -15,17 +15,17 @@ close all;
 % Indicator for plotting. 0- no plots, 1- plots
 
 Tin = 0;
-Pin = 0;
+Pin = 1;
 
-Ain = 0.2;
+Ain = 0.25;
 
 % % initial solve using easy parameters
 
 solinit = bvpinit(linspace(0,L,100),@(x) [Pin; Ain; 0; Tin]);
-opts = bvpset('RelTol',1e-8,'AbsTol',1e-8);
+opts = bvpset('RelTol',1e-3,'AbsTol',1e-6);
 
 if H==1
-    sol = bvp5c(@(x,y) odefun(x,y,eps),@(ya,yb) bcfun(ya,yb,Tin),solinit,opts);
+    sol = bvp4c(@(x,y) odefun(x,y,eps),@(ya,yb) bcfun(ya,yb,Tin),solinit,opts);
 else
 	sol = bvp5c(@(x,y) odefunNH(x,y,eps),@(ya,yb) bcfun(ya,yb,Tin),solinit,opts);
 end

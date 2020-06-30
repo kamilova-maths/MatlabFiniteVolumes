@@ -1,4 +1,4 @@
-global Pe Bi tha N K Gamma P0 St T L D uf x1 x2 Q Ldim uc
+global Pe Bi tha N K Gamma P0 St T L D uf x1 x2 Q Ldim uc uin 
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
@@ -31,7 +31,6 @@ Bi= ((Ldim^2)*h)/(k*R1);
 %tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1dim = 5-2;
 x2dim = 6.5-2; 
@@ -50,6 +49,7 @@ Q0 = Qscale*(x2dim-x1dim)/Ldim; % alternatively, Q0 can be whatever we make it
 %gammaBar = 0.069; 
 gammaBar = 0.09; 
 Gamma = gammaBar*DeltaT; 
+%Gamma = 0 ;
 %Q = Ldim/(x2dim - x1dim);
 Q = 1/(x2-x1); 
 tha = (T_a- T_in)/DeltaT; 
@@ -63,10 +63,23 @@ c1dim = 0.5;
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 % Discretisation in t
-N=1000; 
+N= 1000; 
 % Discretisation in x
-K=300;
+K=400;
 
 % end of the domain
-T =2; L= 1; 
-P0 = D*St*1; 
+T = 6; L= 1; 
+
+% We define non-dimensional day d
+d = 86400*uc/Ldim;
+
+pertb =@(t) 0.5+0.5*sin(pi*t/d);
+condFake = 3.9920; % SOMEDAY THIS WILL BE 4, BUT NOT TODAY. TODAY IT'S FAKE. 
+%P0 = D*St*condFake; 
+P0 = 1; 
+uin =@(t) condFake.*(1+sin(2*pi*t)); 
+%uin = @(t) 4.*(1+sin(4*pi*t));
+%uin = @(t) condFake; 
+  %3.9920
+
+%pertb =@(t) 0.5+0.5*sin(2*pi*t/d);

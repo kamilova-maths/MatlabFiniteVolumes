@@ -1,7 +1,6 @@
 % Clear previous files
 close all 
 clear all
-clc
 
 
 %% COMPUTE STEADY STATE
@@ -10,16 +9,16 @@ clc
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
-global N K T D uf P0t P0
+global N K T D P0t P0 uf
 
-options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
+options = odeset('RelTol',1.0e-3,'AbsTol',1.0e-6);
 
 % set to 1 if we want to compare with steady state
-st = 0; 
+st = 0 ; 
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSG96K300.csv');
+    data = csvread('SSTestK800.csv');
 end
 
 P0t = @(t)P0; 
@@ -29,7 +28,7 @@ P0t = @(t)P0;
 % incon can be steady to check return to steady, or simple, which is just
 % linear A, th =0  everywhere 
 
-incon = 'simple'; 
+incon = 'simple';
 
 switch incon
     case 'simple'
@@ -88,8 +87,7 @@ thtop = [ zeros(N,1), ...
        th         ];
 
 Acel = [ A, ones(N,K)];														% A (cell values)
-Aint = ([D*ones(N,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
-
+Aint = ([2*D*ones(N,1) - A(:,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
 uint  = [ u , ...
 					uf.*ones(N,K+1) ];
 temp = [th, phi];		% complete temperature profile (theta and phi)
@@ -113,5 +111,10 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 
+plot(t,u(:,1),t,1./Aint(:,1))
+hold on 
+plot(t,lam)
+
+u(end,1)
 %PlottingTimesteps
 %PlottingContours

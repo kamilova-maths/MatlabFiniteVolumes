@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPdeWithdPdt(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q St
+global Pe Bi tha L K D uf x1 x2 Q St uin
 
 
 %% Extract the values from the vector
@@ -26,26 +26,26 @@ X = linspace(0,1,K+1)'; % Since we have Dirichlet boundary conditions, we don't 
 dXbar = 1/K;
 Xbar = linspace(0,1,K+1)';
 
-
 %% Finite volumes for A 
-u = usolution( A, th, lam, 1, P );
+u = usolution( A, th, lam, 1, P);
 
-u0t = (dX/(A(1)-D)).*(P/(3));
-%u0t = 4;
-%u0t = u(1);
-%[value, ~, ~] = EventFunction(t);
-%Pt = D*St.*(dCdt(t)- u0t);
-Pt = D*St.*(- u0t);
-% if value == 0 
-%         Pt = Pt + D*St*(1); 
-%         counter = counter+1; 
-% end
- 
-lamt = 1+(uf-u(end))/(2*(1-A(end)));  % compute lamt with the edges
-tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 
+u0t = (lam.*dX/(A(1)-2*D+A(1))).*P/3; % There is a real and distinct possibility that you are the reason for all my troubles
 
+%Pt = D*St.*(uin(t)- u0t);
+Pt = D*St.*(uin(t)- u(1));
+Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  
+%lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges
+lamt = 1+(uf -u(end))/(2*(1-A(end)));  % compute lamt with the edges
+
+
+tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1 
+%tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
 % add ghost node to A
-tmpA = [D; A; 1]; % extend A by 1
+
+%tmpA = [2*D-A(1); A; 1]; % extend A by 1
+tmpA = [D; A; 1];
+
+
 S = -A.*lamt./(lam); 
 FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
@@ -66,7 +66,7 @@ tmpw = [0; w; phi(1)]; % NOTE: I took the temp value from phi (continuity)
 FLw = tmpw(1:end-1).*tmpU; % we use the same velocity as for A
 FRw = tmpw(2:end  ).*tmpU; 
 % Add ghost node to A and ghost node to th (and extend by one term)
-Atmp  = ([ D; A] + [A;1] ) / 2;  
+Atmp  = ([ 2*D-A(1); A] + [A;1] ) / 2;  
 
 thtmp = [ 0; th; phi(1)];% NOTE: I took the temp value from phi (continuity)
 
@@ -114,7 +114,13 @@ Sp =  lamt.*phi./(L-lam)  - (2*Bi./Pe).*(phi-tha) + ...
 
 % This Xbar should be evaluated at the cells too 
 
+
+
+
 %% Assemble RHS
+
+
+
 
 wt = Fw + Sw;  
 phit = Fp +Sp;

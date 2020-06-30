@@ -1,7 +1,7 @@
 % Clear previous files
 close all 
 clear all
-clc
+%clc
 
 
 %% COMPUTE STEADY STATE
@@ -10,7 +10,7 @@ clc
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
-global N K T D uf P0 d counter first
+global N K T D uf P0 
 
 
 % set to 1 if we want to compare with steady state
@@ -18,7 +18,7 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSG23.csv');
+    data = csvread('SSG23P0uin1oDK400.csv');
 end
 
 %P0t = @(t)P0; 
@@ -52,77 +52,46 @@ end
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
-% We define non-dimensional day d
-d = 86400*uc/Ldim;
+
 %d = 0.2;
-counter = 0; 
+
 % We define the addition of cylinders
 
-%Initialise the variables
-A   = []; 
-th  = [];
-phi = [];
-P   = [];
-lam = []; 
+
 
 %% ODE integration 
-te=0;
-i=0;
-tvec=[];
-first = 0; 
-while (isempty(te)==0)
-    if i==0
-        y0(1:K) = A0;
-        y0(1+K:2*K) = A0.*th0;
-        y0(2*K+1:3*K) = phi0;	%must flip since th0bot is stored in reverse order
-        y0(3*K+1) = P0;
-        y0(3*K+2) = lam0;  
-        tout = linspace(0,T,N);
-    else
-        y0(1:K) = ye(1:K);
-        y0(1+K:2*K) = ye(K+1:2*K) ;
-        y0(2*K+1:3*K) = ye(2*K+1:3*K);
-        fac = i - 3*floor((i-1)/3); 
-        y0(3*K+1) = ye(3*K+2)+D*St*(fac); 
-        y0(3*K+2) = ye(2*K+2);  
-        tout = linspace(te,T,N-length(A(:,K))) ;    
-    end
-i=i+1;
-%tout = linspace(te,T,N) ; 
-options = odeset('RelTol',1.0e-06,'AbsTol',1.0e-09,'Events',@EventFunction, ...
-    'InitialStep',1e-4);
-%options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
 
 
-% te - column vector of the times at which events occurred
-% ye - contains the solution value at each of the event times in t.e.
-% ie - contains indices into the vector returned by the event function. The
-% values indicate which event the solver detected
+
+
 tic
-[t,y,te,ye,ie] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
-%[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
-toc
-first = te
+y0(1:K) = A0;
+y0(1+K:2*K) = A0.*th0;
+y0(2*K+1:3*K) = phi0;	
+y0(3*K+1) = P0; 
+y0(3*K+2) = lam0;  
+
+options = odeset('RelTol',1.0e-4,'AbsTol',1.0e-8);
+ 
+
+
+[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
+
 %The 't' values are given at the rows 
 
-A   = [A; y(:,1:K)]; % This is A from X=0 to X=1 (this is, 0<x<lambda)
+A   = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
 
-th  = [th; y(:,K+1:2*K)./y(:,1:K)];
+th  = y(:,K+1:2*K)./y(:,1:K);
 
-phi =  [phi; y(:,2*K+1:3*K)];
+phi = y(:,2*K+1:3*K);
 
-P   = [ P; y(:,3*K+1)]; 
+P   = y(:,3*K+1); 
  
-lam = [lam; y(:,3*K+2)]; 
-
-tvec = [tvec; t];
-
-end
+lam = y(:,3*K+2);
+toc
 
 % Save the solution from here and then import into steady state to see if
 % it actually converges to a steady state
-t = tvec; 
-N = length(tvec); 
 %% We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
@@ -138,7 +107,7 @@ Acel = [ A, ones(N,K)];														% A (cell values)
 Aint = ([D*ones(N,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
 
 uint  = [ u , ...
-					uf.*ones(N,K+1) ];
+		 uf.*ones(N,K+1) ];
 temp = [th, phi];		% complete temperature profile (theta and phi)
 
 
@@ -160,5 +129,5 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 
-PlottingTimesteps
-%PlottingContours
+%PlottingTimesteps
+PlottingContours

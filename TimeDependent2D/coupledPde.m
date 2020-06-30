@@ -28,20 +28,24 @@ Xbar = linspace(0,1,K+1)';
 
 
 %% Finite volumes for A 
-u = usolution( A, th, lam, 1, P0t(t) );
+u = usolution( A, th, lam, 1, P0t(t));
+% Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  
+Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  % A at the interfaces
+lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
-lamt = 1+(uf-u(end))/(2*(1-A(end)));  % compute lamt with the edges
-tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 
-
+%uf = 1./Aint(end);  
+tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
+%tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
 % add ghost node to A
-tmpA = [D; A; 1]; % extend A by 1
+tmpA = [2*D-A(1); A; 1]; % extend A by 1
+%tmpA = [D; A; 1]; % extend A by 1
 S = -A.*lamt./(lam); 
 FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
 F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
-
+%F(1) = D*tmpU(1); % now here
 F  = ( F(1:end-1) - F(2:end) ) / (dX*lam); % F is the rhs to dA/dt
-
+%F(1) = D*u(1); % now here
 Arhs = F + S; 
 
 
@@ -55,7 +59,8 @@ tmpw = [0; w; phi(1)]; % NOTE: I took the temp value from phi (continuity)
 FLw = tmpw(1:end-1).*tmpU; % we use the same velocity as for A
 FRw = tmpw(2:end  ).*tmpU; 
 % Add ghost node to A and ghost node to th (and extend by one term)
-Atmp  = ([ D; A] + [A;1] ) / 2;  
+%Atmp  = ([ D; A] + [A;1] ) / 2;
+Atmp = ([ 2*D-A(1); A] + [A;1] ) / 2; 
 
 thtmp = [ 0; th; phi(1)];% NOTE: I took the temp value from phi (continuity)
 

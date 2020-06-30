@@ -3,9 +3,10 @@ clear all
 close all 
 clc
 
-% Parameters shared with other routines (I'm not very sure about this,but
-% let's give it a try)
-global Pe Bi tha N K gamma P0 St T L D uf 
+% Parameters shared with other routines 
+global Pe Bi tha N K Gamma P0 St T L D uf 
+
+%% FIRST PART: PARAMETER DEFINITION, CALCULATING ANALYTICAL SOLUTION FOR COMPARISON
 
 % Define parameters
 % Data to use 
@@ -36,7 +37,7 @@ Bi= ((L^2)*h)/(k*R1);
 tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
-gamma = 0; 
+Gamma = 0; 
 
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1 = 5/7;
@@ -46,7 +47,7 @@ eps = 1e-2;
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=800; K=300;
+N=1000; K=900;
 % end of the domain
 T = 5; L= 1 ;
 dx = L/K;
@@ -56,9 +57,6 @@ H=0;
 
 % Plots for steady state - 1 , no plots for steady state - 0
 plt = 0;
-
-% We try with tha=0
-%[P, A0, J0, th0, ~] = InitialConditionsSteady(K,gamma,Q,x1,x2,eps,St,tha,Bi,Pe,P0,R0,L,H,plt);
 
 % Analytic solution for A and P (and u?) 0 for the steady state, with
 % constant mu (no temperature) 
@@ -74,6 +72,11 @@ P0bar =  6*atan(P0./sqrt(fac))./(sqrt(fac));
 Aex = (fac/(6*St)).*tan(sqrt(fac).*(x+P0bar)./6).^2 - P0.^2./(6*St)+D ; 
 
 
+
+%% USING TIME DEPENDENT SOLVER 
+% Initial conditions that satisfy the boundary conditions but are not the
+% analytical solution ( apart from lambda)
+
 lam0 = lamex(St); 
 % Note that Aex is A evaluated at the nodes. I want to evaluate it at the
 % cells, so I have to perform an averaging, of the form 
@@ -81,21 +84,13 @@ u0 = 1./Aex';
 Aex = [D; Aex'];
 A0 = (Aex(1:end-1) + Aex(2:end))./2; 
 
-
-
-% Find lam0, then resize both sides with an interpolation (only necessary
-% to do this for the steady state, the conditions on the rest are much
-% nicer because of our rescalings 
-%Initial conditions given by A0, th0
-% A0=A0';
-% th0=th0'; 
-% lam0 = 1; 
-
+% I don't solve for theta as this is the constant viscosity case, but I
+% still input it as a zero vector in order to keep the structure of the
+% numerical method
 th0 = zeros(size(A0)); 
-uf = 1;
-%u0 = 1./A0; 
-%u0 = usolution(A0,th0,lam0,L,P0); 
 
+% dirichlet condition for u at x=1
+uf = 1;
 
 % We now check the return to steady state 
 y0(1:K) = (1- 1e-2 -D).*linspace(0,1,K)'+D; 
@@ -109,13 +104,11 @@ tout = linspace(0,T,N);
 reltol = 1.0e-04; abstol = 1.0e-06;
 options = odeset('RelTol',reltol,'AbsTol',abstol);
 [t,y] = ode15s(@coupledPdeNoTemp,tout,y0);
-%[t,y] = ode15s(@coupledPde,tout,y0); 
 
 A  = y(:,1:K);
 lam   = y(:,1+K);
 
-%% Solve for u at next time step (laplacian)
-% We construct u from A 
+%%  We construct u from A 
 
 u = zeros(size(A));
 %umat(1,:) = u0; 
@@ -124,6 +117,8 @@ for i=1:N
 end
 
 Acel = [ A, ones(N,K)];		
+Aint = ([2*D*ones(N,1) - A(:,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
+
 
 %Afull  = [ D*ones(N,1), ...
 %       A          ];   

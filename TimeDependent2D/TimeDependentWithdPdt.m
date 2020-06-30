@@ -10,7 +10,7 @@ clc
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
-global N K T D uf P0 d counter first
+global N K T D uf P0 counter first
 
 
 % set to 1 if we want to compare with steady state
@@ -52,8 +52,7 @@ end
 % Independent variable for ODE integration 
 tout = linspace(0,T,N);
 
-% We define non-dimensional day d
-d = 86400*uc/Ldim;
+
 %d = 0.2;
 counter = 0; 
 % We define the addition of cylinders
@@ -69,7 +68,31 @@ lam = [];
 te=0;
 j=0;
 tvec=[];
-first = 0; 
+first = 0;
+fac = zeros(floor(T/d),1);
+% for i=1:floor(T/d)
+%     val = (i+1) - 4*floor((i)/4);
+%     if (val==1 || val==2)
+%         fac(i) = 1;
+%     else  
+%         fac(i) = 0;
+%     end
+%     
+% end
+
+for i=1:floor(T/d)
+    val = (i+1) - 7*floor((i)/7);
+    if (val<=4)
+        fac(i) = 1;
+    elseif val==5  
+        fac(i) = 5;
+    else 
+        fac(i) = 0; 
+    end
+    
+end
+
+
 %fac = [1, 1, 1, 1, 3, 0, 0];
 tic
 
@@ -78,8 +101,8 @@ while (isempty(te)==0)
     if j==0
         y0(1:K) = A0;
         y0(1+K:2*K) = A0.*th0;
-        y0(2*K+1:3*K) = phi0;	%must flip since th0bot is stored in reverse order
-        y0(3*K+1) = P0;
+        y0(2*K+1:3*K) = phi0;	
+        y0(3*K+1) = P0; 
         y0(3*K+2) = lam0;  
         tout = linspace(0,T,N);
     else
@@ -87,15 +110,15 @@ while (isempty(te)==0)
         y0(1+K:2*K) = ye(K+1:2*K) ;
         y0(2*K+1:3*K) = ye(2*K+1:3*K);
         %fac = (j+1) - 3*floor((j)/3); 
-        fac=1;
-        y0(3*K+1) = ye(3*K+1)+D*St*(fac); 
+        %fac=1;
+        y0(3*K+1) = ye(3*K+1)+D*St*(fac(j)); 
         y0(3*K+2) = ye(3*K+2);  
         tout = linspace(te,T,N-length(A(:,K))) ;    
     end
 j=j+1;
 %tout = linspace(te,T,N) ; 
-options = odeset('RelTol',1.0e-09,'AbsTol',1.0e-10,'Events',@EventFunction, ...
-    'InitialStep',1e-6);
+options = odeset('RelTol',1.0e-10,'AbsTol',1.0e-12,'Events',@EventFunction, ...
+    'InitialStep',1e-7);
 %options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
 
 
@@ -105,7 +128,7 @@ options = odeset('RelTol',1.0e-09,'AbsTol',1.0e-10,'Events',@EventFunction, ...
 % values indicate which event the solver detected
 [t,y,te,ye,ie] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
 %[t,y] = ode15s(@coupledPdeWithdPdt,tout,y0,options); 
-first = te;
+first = te
 %The 't' values are given at the rows 
 
 A   = [A; y(:,1:K)]; % This is A from X=0 to X=1 (this is, 0<x<lambda)
@@ -165,5 +188,5 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 
-PlottingTimesteps
-%PlottingContours
+%PlottingTimesteps
+PlottingContours

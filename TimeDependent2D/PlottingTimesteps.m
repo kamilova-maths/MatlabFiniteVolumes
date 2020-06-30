@@ -2,7 +2,7 @@
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSG23c1.csv');
+    %data = csvread('SSG23P0uin1oD.csv');
     x0cel = data(1:2*K);
     
     Asteady = data(2*K+1:4*K); 
@@ -109,18 +109,19 @@ title('Velocity')
 figure; 
 plot(t, lam);
 if dat == 1
-csvwrite('lam.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]]);
+csvwrite('lam.csv',[t, lam]);
 %csvwrite('lamG23.csv',[[t(1), lam(1)]; [t(5:5:end), lam(5:5:end)]; [t(end), lam0steady]]);
 end
 title('lambda')
 xlabel('t')
 
+return
 
 % PLOTTING Pt
 figure; 
 plot(t, P);
 if dat == 1
-csvwrite('P.csv',[[t(1), P(1)]; [t(5:5:end), P(5:5:end)]]);
+csvwrite('P.csv',[t,P]);
 %csvwrite('PG23.csv',[[t(1), P(1)]; [t(5:5:end), P(5:5:end)]; [t(end), P0]]);
 end
 title('P')

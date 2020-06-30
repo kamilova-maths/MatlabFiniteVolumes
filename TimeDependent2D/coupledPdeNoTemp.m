@@ -27,11 +27,12 @@ lamt = 1+(uf-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
 tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 
 
+%tmpU = [ 1/D; u ] -lamt.*X ; % size K+1 x 1 
 
 
 % add ghost node to A
-tmpA = [D; A; 1]; % extend A by 1
-
+%tmpA = [D; A; 1]; % extend A by 1
+tmpA = [2*D-A(1); A; 1]; 
 %S  = -(A + [A(2:end);1]).*lamt./(2*lam); 
 S = -A.*lamt./(lam);  % this (or the above expression) makes no difference, 
 % stop changing it back and forth 

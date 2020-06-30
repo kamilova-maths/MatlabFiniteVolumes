@@ -11,55 +11,8 @@ clc
 % Parameters shared with other routines (alternatively you can compute them
 % separately with the dimensional parameters) 
 
-global Pe Bi tha N K gamma P0 St T L D uf x1 x2 Q P0t
-
-rho= 1.8*10^3; %Bergstrom ; 
-g = 10; 
-c= 900; % Fitt and Howell
-Ldim=7; % Temperature Profiles in Soderberg Electrodes
-uc = 10^-5; %Bergstrom approximation
-R0=0.5;
-R1=1; 
-k = 3; 
-Qc=15000; %Taken very vaguely from Temperature profiles in Soderberg electrodes. 
-mu0=10^10; % given by Bjornar at a reference temperature
-T_a=343; 
-h = 7; 
-
-%Defining non-dimensional parameters
-% Peclet number
-Pe = (rho*c*uc*Ldim)/(k);
-epsilon=R1/Ldim;
-St=(rho*g*Ldim^2)/(uc*mu0);
-
-P0 = (10000*Ldim)/((R1^2)*uc*mu0);
-Bi= ((Ldim^2)*h)/(k*R1); 
-DeltaT = (Qc*Ldim)/(rho*c*uc);
-%DeltaT = (Qc*Ldim)/(Bi*rho*c*uc); 
-
-tha = 0.005; 
-D = (R0^2)/(R1^2); 
-
-gamma = 20; 
-
-%This is the area of the clamps, taken from Temperature profiles ... 
-x1 = 5/7;
-x2 = 6.5/7;
-Q = 1;
-
-uf = 1; 
-% Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
-% gamma = 30;  x1 = 5/7; x2 = 6.5/7; Q = 1; uf = 1; 
-
-% Calculating the initial conditions as a solution of the steady state
-% problem 
-% Discretisation in t
-N=800; 
-% Discretisation in x
-K=800;
-
-% end of the domain
-T = 2; L=1.5 ; 
+ParametersDefinition
+global K P0 L uf 
 
 % Calculate steady state 
         % Do you want the Heaviside? (Yes, you do). 
@@ -67,7 +20,7 @@ H=1;
 
 % Plots for steady state - 1 , no plots for steady state - 0
 plt = 0;
-eps = 1e-4;
+eps = 1e-3;
 
 [Psteady, A0steady, J0steady, th0steadyfull, xsteady] = InitialConditionsSteady(eps,H,plt);
 % A0 and th0 are actually whatever size Matlab needs them to be, as it uses
