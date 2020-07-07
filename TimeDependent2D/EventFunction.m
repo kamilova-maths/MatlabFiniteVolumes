@@ -1,5 +1,5 @@
 function [value, isterminal, direction] = EventFunction(t,y)
-    global Ldim uc first d
+    global first d
     %v1 = mod(t*Ldim/(86400*uc),1);
     v1 = mod(t,d); 
     tol = 1e-3;

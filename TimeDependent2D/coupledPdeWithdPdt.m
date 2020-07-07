@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPdeWithdPdt(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q St uin
+global Pe Bi tha L K D uf x1 x2 Q St d
 
 
 %% Extract the values from the vector
@@ -29,10 +29,16 @@ Xbar = linspace(0,1,K+1)';
 %% Finite volumes for A 
 u = usolution( A, th, lam, 1, P);
 
-u0t = (lam.*dX/(A(1)-2*D+A(1))).*P/3; % There is a real and distinct possibility that you are the reason for all my troubles
+u0t = (lam.*dX)/((A(1)-2*D+A(1))).*P/3;
 
-Pt = D*St.*(uin(t)- u0t);
-%Pt = D*St.*(uin(t)- u(1));
+% 
+% dudx = (1/2).*(uf-u(end))/(lam*dX);
+% dAdx = 2*(1-A(end))/(lam*dX + (L-lam)*dXbar);
+% lamt = 1+(dudx/dAdx);
+
+%Pt = D*St.*(- u0t);
+Pt = D*St.*(- u(1));
+
 Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  
 %lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges
 lamt = 1+(uf -u(end))/(2*(1-A(end)));  % compute lamt with the edges
@@ -55,6 +61,7 @@ F  = ( F(1:end-1) - F(2:end) ) / (dX*lam); % F is the rhs to dA/dt
 
 Arhs = F + S; 
 
+Arhs(end) = Arhs(end)-lamt; 
 
  %% Solve for w at next time step with finite volumes  (semi-implicit, parabolic)
  % Assemble matrices

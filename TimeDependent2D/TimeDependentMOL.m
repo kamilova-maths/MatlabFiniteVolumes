@@ -5,30 +5,31 @@ clear all
 
 %% COMPUTE STEADY STATE
 % Define parameters
+global N K T D P0t P0 uf c1
 
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
-global N K T D P0t P0 uf
-
 options = odeset('RelTol',1.0e-3,'AbsTol',1.0e-6);
 
 % set to 1 if we want to compare with steady state
-st = 0 ; 
+st = 1 ; 
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSTestK800.csv');
+    data = csvread('SSK300.csv');
 end
 
-P0t = @(t)P0; 
-%P0t = @(t) P0 + P0*sin(2*pi*t); % base case 
+P0=1;
+%P0t = @(t)D*St*c1; 
+%P0t =@(t) 1;
+P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
 % Initial conditions
 
 % incon can be steady to check return to steady, or simple, which is just
 % linear A, th =0  everywhere 
 
-incon = 'simple';
+incon = 'steady';
 
 switch incon
     case 'simple'
@@ -96,7 +97,7 @@ temp = [th, phi];		% complete temperature profile (theta and phi)
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
     
-    
+  
 if st==0
     xvector1 = [xcel*lam(end);lam(end) + xcel*(L-lam(end))];
     xvector2 = [xint*lam(end);lam(end) + xint(2:end)*(L-lam(end))];
@@ -111,10 +112,10 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 
-plot(t,u(:,1),t,1./Aint(:,1))
-hold on 
-plot(t,lam)
-
-u(end,1)
-%PlottingTimesteps
+% plot(t,u(:,1),t,1./Aint(:,1))
+% hold on 
+% plot(t,lam)
+% 
+% u(end,1)
+PlottingTimesteps
 %PlottingContours

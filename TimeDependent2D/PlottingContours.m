@@ -1,4 +1,4 @@
-sav = 0; % indicator for saving data
+sav = 1; % indicator for saving data
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 
@@ -37,11 +37,13 @@ xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
 contourf(tvectorint, xvectorint,uint,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
+caxis([1 5])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')
     csvwrite('lam.csv',[t, lam]);
-    csvwrite('P.csv',[t, P]);
+    csvwrite('P.csv',[t, P])
+   % csvwrite('P.csv',[t,P0t(t)]);
 end
 % PLOTTING lambda
 figure; 
@@ -49,7 +51,7 @@ plot(t, lam);
 
 hold on
 plot(t,P);  
-
+%plot(t,P0t(t));
 %plot([t(1),t(end)], [lam(1),lam(1)]);
 title('lambda and P')
 xlabel('t')

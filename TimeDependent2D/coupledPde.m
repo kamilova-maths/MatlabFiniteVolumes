@@ -1,7 +1,7 @@
 %function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPde(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q P0t
+global Pe Bi tha L K D uf x1 x2 Q P0t P0
 
 
 %% Extract the values from the vector
@@ -31,10 +31,16 @@ Xbar = linspace(0,1,K+1)';
 u = usolution( A, th, lam, 1, P0t(t));
 % Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  
 Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  % A at the interfaces
-lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges
+
+
+dudx = (1/2).*(uf-u(end))/(lam*dX);
+dAdx = 2*(1-A(end))/(lam*dX + (L-lam)*dXbar);
+lamt = 1+(dudx/dAdx);
+
+%lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
 %uf = 1./Aint(end);  
-tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
+tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1 
 %tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
 % add ghost node to A
 tmpA = [2*D-A(1); A; 1]; % extend A by 1
@@ -47,6 +53,7 @@ F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
 F  = ( F(1:end-1) - F(2:end) ) / (dX*lam); % F is the rhs to dA/dt
 %F(1) = D*u(1); % now here
 Arhs = F + S; 
+Arhs(end) = Arhs(end)-lamt; 
 
 
  %% Solve for w at next time step with finite volumes  (semi-implicit, parabolic)
@@ -55,12 +62,12 @@ Arhs = F + S;
 
 % Add ghost node to w (and extend by one term)
 tmpw = [0; w; phi(1)]; % NOTE: I took the temp value from phi (continuity)
-
+ 
 FLw = tmpw(1:end-1).*tmpU; % we use the same velocity as for A
 FRw = tmpw(2:end  ).*tmpU; 
 % Add ghost node to A and ghost node to th (and extend by one term)
-%Atmp  = ([ D; A] + [A;1] ) / 2;
-Atmp = ([ 2*D-A(1); A] + [A;1] ) / 2; 
+Atmp  = ([ D; A] + [A;1] ) / 2;
+%Atmp = ([ 2*D-A(1); A] + [A;1] ) / 2; 
 
 thtmp = [ 0; th; phi(1)];% NOTE: I took the temp value from phi (continuity)
 

@@ -3,7 +3,8 @@ clear all
 close all 
 %clc
 
-%% MAIN CODE FOR EASY VERSION OF EXPERIMENTS
+%% MAIN CODE FOR 'EASY' VERSION OF EXPERIMENTS
+
 % These are a series of tests, which currently ALL fail. I am absolutely
 % all out of ideas for sure. 
 % First we define the parameters (feel free to ignore it) 
@@ -33,15 +34,18 @@ close all
 % Alternatively you can make uin to be whatever it converges to and re-run
 % it.THIS ALSO DOES NOT WORK 
 
-% Further tests are done with initial = 'simple', where we u
+% Further tests are done with initial = 'simple', where we use simple
+% initial conditions and see if it converges to the steady state. 
+
 
 %
 
 
-% Parameters shared with other routines 
-global Pe Bi N K Gamma P0 St T L D uf uin
 
 %% FIRST PART: PARAMETER DEFINITION, CALCULATING ANALYTICAL SOLUTION FOR COMPARISON
+
+% Parameters shared with other routines 
+global Pe Bi N K Gamma P0 St T L D uf uin
 
 % Define parameters
 % Data to use 
@@ -73,26 +77,30 @@ St = 27;
 %P0=0;
 Bi= ((Ldim^2)*h)/(k*R1); 
 
-P0 = 1;
+P0 = 0.1;
 %tha = 0.005; 
 D = (R0^2)/(R1^2); 
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
-N=500; K=400;
+N=2000; K=400;
 % end of the domain
-T = 10; L= 1 ;
+T = 100; L= 1 ;
 
 
 % We add the heaviside with H=1, and we remove it with H=0. 
 H     = 0;
 Gamma = 0; 
-uin   = @(t) 1/D; % this is what it should be 
-%uin = @(t) 3.9946; % this is what it converges to 
-%uin = @(t) (3.9946).*(1+sin(2*pi*t)); 
+%uin  = @(t) 1- 1/D; % this is what it should be 
+%uin = @(t) 0.2; 
+%uin = @(t)  3.9953; % this is what it converges to 
+uin = @(t) (1/D).*(1+0.5*sin(2*pi*t)); 
+%uin = @(t)0.5*(1+0.5*sin(2*pi*t));
+%uin = @(t) (0.2).*(1+0.5*sin(2*pi*t)); 
+
 % Plots for steady state - 1 , no plots for steady state - 0
 plt   = 0;
-
+%% CALCULATING ANALYTIC SOLUTION FOR CHOSEN PARAMETERS.
 % Analytic solution for A and P (and u?) 0 for the steady state, with
 % constant mu (no temperature) 
 lamex = @(St) atan(sqrt(P0^2 + 6*St - 6*D*St)/sqrt(6*St*D-P0^2)).*6./(sqrt(6*St*D-P0^2)) - ...
@@ -105,7 +113,6 @@ x     = linspace(0,L,K);
 fac   = 6*St*D-P0^2;
 P0bar =  6*atan(P0./sqrt(fac))./(sqrt(fac)); 
 Aex   = (fac/(6*St)).*tan(sqrt(fac).*(x+P0bar)./6).^2 - P0.^2./(6*St)+D ; 
-
 
 
 
@@ -161,10 +168,10 @@ end
 
 tout = linspace(0,T,N);
 
-reltol = 1.0e-04; abstol = 1.0e-06;
+reltol = 1.0e-4; abstol = 1.0e-8; %% CHANGING TOLERANCE DIDN'T DO ANYTHING
 options = odeset('RelTol',reltol,'AbsTol',abstol);
-Pvalue = 'constant';
-%Pvalue = 'dPdt';
+%Pvalue = 'constant';
+Pvalue = 'dPdt';
 
 switch Pvalue
     case 'constant'

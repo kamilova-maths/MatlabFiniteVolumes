@@ -1,4 +1,4 @@
-global Pe Bi tha N K Gamma P0 St T L D uf x1 x2 Q Ldim uc uin 
+global Pe Bi tha N K Gamma St T L D uf x1 x2 Q Ldim uc uin c1
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
@@ -24,7 +24,7 @@ epsilon=R1/Ldim;
 St=(rho*g*Ldim^2)/(uc*mu0);
 %St = 10; 
 %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
-%P0=0;
+
 Bi= ((Ldim^2)*h)/(k*R1); 
 
 
@@ -56,27 +56,27 @@ tha = (T_a- T_in)/DeltaT;
 %tha=0;
 uf = 1; 
 c1dim = 0.5; 
-%c1 = c1dim/c1dim; 
+c1 = c1dim/Ldim; 
 % Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
 % gamma = 30;  x1 = 5/7; x2 = 6.5/7; Q = 1; uf = 1; 
 
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 % Discretisation in t
-N= 1000; 
+N= 800; 
 % Discretisation in x
-K=400;
+K=300;
 
 % end of the domain
-T = 6; L= 1; 
+T = 5; L= 1; 
 
 % We define non-dimensional day d
 d = 86400*uc/Ldim;
 
+
 pertb =@(t) 0.5+0.5*sin(pi*t/d);
 condFake = 3.9920; % SOMEDAY THIS WILL BE 4, BUT NOT TODAY. TODAY IT'S FAKE. 
-%P0 = D*St*condFake; 
-P0 = 1; 
+%P0 = D*St*condFake;  
 uin =@(t) condFake.*(1+sin(2*pi*t)); 
 %uin = @(t) 4.*(1+sin(4*pi*t));
 %uin = @(t) condFake; 
