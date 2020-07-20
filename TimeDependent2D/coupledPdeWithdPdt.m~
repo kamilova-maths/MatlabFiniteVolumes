@@ -32,9 +32,9 @@ u = usolution( A, th, lam, 1, P);
 %lamt = 1+(dudx/dAdx);
 u0t = P.*(lam.*dX)/(3*(A(1)-2*D+A(1)));
 %Pt = D*St.*(- u0t);
-Pt = D*St.*(- u(1));
+%Pt = D*St.*(- u(1));
 
-%Pt = D*St.*(uval- u(1));
+Pt = D*St.*(uval- u(1));
 
 %Pt = D*St.*(uin(t)- u(1))
 %lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges

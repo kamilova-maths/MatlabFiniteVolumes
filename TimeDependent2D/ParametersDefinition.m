@@ -1,4 +1,4 @@
-global Pe Bi tha N K Gamma St T L D uf x1 x2 Q Ldim uc uin c1
+global Pe Bi tha N K Gamma St T L D uf x1 x2 Q Ldim uc uin c1 P0
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
@@ -34,8 +34,11 @@ D = (R0^2)/(R1^2);
 %This is the area of the clamps, taken from Temperature profiles ... 
 x1dim = 5-2;
 x2dim = 6.5-2; 
-x1 = x1dim/Ldim;
-x2 = x2dim/Ldim;
+%x1 = x1dim/Ldim;
+%x2 = x2dim/Ldim;
+
+x1 = 0.7;
+x2 = 0.9;
 % Q scale is Q0*Qprime
 eps = 1e-4;
 %DeltaT = (Qc*Ldim)/(rho*c*uc);
@@ -63,7 +66,7 @@ c1 = c1dim/Ldim;
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 % Discretisation in t
-N= 800; 
+N= 80; 
 % Discretisation in x
 K=300;
 
@@ -76,8 +79,11 @@ d = 86400*uc/Ldim;
 
 pertb =@(t) 0.5+0.5*sin(pi*t/d);
 condFake = 3.9920; % SOMEDAY THIS WILL BE 4, BUT NOT TODAY. TODAY IT'S FAKE. 
+%P0=1;
 %P0 = D*St*condFake;  
-uin =@(t) condFake.*(1+sin(2*pi*t)); 
+%uin =@(t) condFake.*(1+sin(2*pi*t)); 
+uin = @(t) 1/D;
+%uin = @(t) 3.9; 
 %uin = @(t) 4.*(1+sin(4*pi*t));
 %uin = @(t) condFake; 
   %3.9920

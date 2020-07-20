@@ -7,9 +7,7 @@ function u = usolution(A,theta,lam,xmax,P)
 %         K     : discretisation in x 
 % OUTPUT: u     : K x 1 vector for u 
 
-
-global K Gamma St D uf P0
-    % I feel like I am missing one value of u right before this. 
+global K Gamma St D uf
     dx = xmax/(K);
 	theta = [0;theta];
     tiph = 3*exp(-Gamma*theta);
@@ -17,7 +15,7 @@ global K Gamma St D uf P0
     Atmp = [2*D-A(1); A];
   
     % Add ghost node to A and ghost node to th (and extend by one term)
-    Aint = ([D; A] + [A; 1]) /2; 
+    Aint = ([2*D-A(1); A] + [A; 1]) /2; 
     
     % The order of this matrix is LOWER, DIAG, UPPER
     Dx2u = spdiags( [ Atmp(2:end).*tiph(2:end), -(Atmp(1:end-1).*tiph(1:end-1)+ ...

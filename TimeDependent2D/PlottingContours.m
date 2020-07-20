@@ -1,4 +1,4 @@
-sav = 1; % indicator for saving data
+
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 
@@ -10,7 +10,7 @@ figure;
 title('Temperature')
 tvector = t*ones(1,2*K); 
 xvector = [lam*xcel',lam + (L-lam)*xcel'];
-contourf(tvector, xvector,temp,'LineColor', 'none')
+contourf(tvector, xvector,temp,20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
 if sav==1
@@ -23,7 +23,7 @@ end
 figure; 
 tvector = t*ones(1,2*K); 
 xvector = [lam*xcel',lam + (L-lam)*xcel'];
-contourf(tvector, xvector,Acel,'LineColor', 'none')
+contourf(tvector, xvector,Acel, 20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
 if sav==1
@@ -34,10 +34,10 @@ end
 figure; 
 tvectorint = t*ones(1,2*K+1);
 xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
-contourf(tvectorint, xvectorint,uint,'LineColor', 'none')
+caxis([1 5])
+contourf(tvectorint, xvectorint,uint,20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-caxis([1 5])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')

@@ -5,12 +5,14 @@ global Pe Bi tha L K D uf x1 x2 Q P0t P0
 
 
 %% Extract the values from the vector
-A = y(1:K); 
+Alam = y(1:K); 
 w = y(K+1:2*K); 
-th = w./A; 
+
 phi = y(2*K+1:3*K);
 lam = y(3*K+1); 
+A = Alam./lam; 
 
+th = w./A; 
 Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source  
 
 %Qth = @(x) Qvalue*(x>x1/lam).*(x<x2/lam);   % heat source
@@ -45,15 +47,15 @@ tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1
 % add ghost node to A
 tmpA = [2*D-A(1); A; 1]; % extend A by 1
 %tmpA = [D; A; 1]; % extend A by 1
-S = -A.*lamt./(lam); 
+% S = -A.*lamt./(lam); 
 FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
 F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
 %F(1) = D*tmpU(1); % now here
 F  = ( F(1:end-1) - F(2:end) ) / (dX*lam); % F is the rhs to dA/dt
 %F(1) = D*u(1); % now here
-Arhs = F + S; 
-Arhs(end) = Arhs(end)-lamt; 
+Alamrhs = F; 
+%Arhs(end) = Arhs(end)-lamt; 
 
 
  %% Solve for w at next time step with finite volumes  (semi-implicit, parabolic)
@@ -119,12 +121,12 @@ Sp =  lamt.*phi./(L-lam)  - (2*Bi./Pe).*(phi-tha) + ...
 
 wt = Fw + Sw;  
 phit = Fp +Sp;
-At = Arhs; 
+Alamt = Alamrhs; 
 
 % - solve
 
 
-yt(1:K)= At;
+yt(1:K)= Alamt;
 
 %% Impose RHS
 yt(K+1:2*K) = wt;

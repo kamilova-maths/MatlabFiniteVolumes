@@ -115,7 +115,6 @@ end
 title('lambda')
 xlabel('t')
 
-return
 
 % PLOTTING Pt
 figure; 
