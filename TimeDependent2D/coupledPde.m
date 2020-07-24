@@ -35,11 +35,11 @@ u = usolution( A, th, lam, 1, P0t(t));
 Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  % A at the interfaces
 
 
-dudx = (1/2).*(uf-u(end))/(lam*dX);
-dAdx = 2*(1-A(end))/(lam*dX + (L-lam)*dXbar);
-lamt = 1+(dudx/dAdx);
+% dudx = (1/2).*(uf-u(end))/(lam*dX);
+% dAdx = 2*(1-A(end))/(lam*dX + (L-lam)*dXbar);
+% lamt = 1+(dudx/dAdx);
 
-%lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
+lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
 %uf = 1./Aint(end);  
 tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1 
@@ -52,7 +52,7 @@ FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
 F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
 %F(1) = D*tmpU(1); % now here
-F  = ( F(1:end-1) - F(2:end) ) / (dX*lam); % F is the rhs to dA/dt
+F  = ( F(1:end-1) - F(2:end) ) / (dX); % F is the rhs to dA/dt
 %F(1) = D*u(1); % now here
 Alamrhs = F; 
 %Arhs(end) = Arhs(end)-lamt; 

@@ -13,23 +13,23 @@ ParametersDefinition
 options = odeset('RelTol',1.0e-3,'AbsTol',1.0e-6);
 
 % set to 1 if we want to compare with steady state
-st = 0 ; 
+st = 1; 
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300.csv');
+    data = csvread('SSK300v1.csv');
 end
 
-P0=0;
+P0=1;
 %P0t = @(t)D*St*c1; 
-P0t =@(t) 0;
+P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
 % Initial conditions
 
 % incon can be steady to check return to steady, or simple, which is just
 % linear A, th =0  everywhere 
 
-incon = 'simple';
+incon = 'steady';
 
 switch incon
     case 'simple'
@@ -62,8 +62,11 @@ tout = linspace(0,T,N);
 %% ODE integration 
 
 tic
-[t,y] = ode15s(@coupledPde,tout,y0); 
+tspan = [0 T] ; 
+[t,y] = ode15s(@coupledPde,tspan,y0); 
 toc
+
+N = length(t); 
 
 Alam  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
 
@@ -81,7 +84,7 @@ th = y(:,K+1:2*K)./A;
 %% We calculate u with the solution for A, th and lam
 u = zeros(size(A));
 for i=1:N
-    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1,P0t(tout(i)));   
+    u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1,P0t(t(i)));   
 end
 
 

@@ -16,7 +16,8 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300pattern1Qp7.csv');
+    %data = csvread('SSK300avg2.csv');
+    data = csvread('SSK300pattern2Qp7.csv');
 end
 
 %P0 = D*St*0.1286;
@@ -125,15 +126,15 @@ while (isempty(te)==0)
         y0(3*K+2) = lam0;  
         tspan = [0 T];
     else
-%              val = j- 7*floor((j-1)/7);
-%              if (val<=4)
-%                  fac = 2*c1;
-%                 elseif val== 5  
-%                     fac = 5*c1;
-%              else 
-%                     fac = c1; 
-%              end
-        fac = 0.2169; 
+             val = j- 7*floor((j-1)/7);
+             if (val<=4)
+                 fac = 2*c1;
+                elseif val== 5  
+                    fac = 20*c1;
+             else 
+                    fac = c1; 
+             end
+        %fac = 0.4087; 
         cyladd = [cyladd; fac];
         y0(1:K) = ye(1:K);
         y0(1+K:2*K) = ye(K+1:2*K) ;
@@ -152,13 +153,10 @@ while (isempty(te)==0)
     end
 j=j+1;
 
-
-
 %tout = linspace(te,T,N) ; 
 options = odeset('RelTol',1.0e-4,'AbsTol',1.0e-4,'Events',@EventFunction);
     
 %options = odeset('RelTol',1.0e-03,'AbsTol',1.0e-06);
-
 
 % te - column vector of the times at which eventsliss occurred
 % ye - contains the solution value at each of the event times in t.e.
@@ -231,5 +229,6 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 sav = 0; % indicator for saving data
+P0tval =0;
 %PlottingTimesteps
 PlottingContours
