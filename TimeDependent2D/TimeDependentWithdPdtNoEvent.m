@@ -171,6 +171,8 @@ end
 % have K terms
 % set to 1 if we want to save data in csv file 
 dat = 0; 
+sav = 0;
+P0tval = 0; 
 
 %PlottingTimesteps
 PlottingContours

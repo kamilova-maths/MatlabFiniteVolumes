@@ -52,18 +52,13 @@ FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
 F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
 
-%F  = ( F(1:end-1) - F(2:end) ) / (dX*lam); % F is the rhs to dA/dt
+% This works but doesn't change the slow changing drift. I think my other
+% control system is better anyway 
+%F(end) = 1 - lamt;
 
-% I think that lambda should not go here (in the denominator), as I am now solving A lambda _t 
-% Yeah this does not work at all, not even a little bit of work. 
-%F(end) = 1;
 F  = ( F(1:end-1) - F(2:end) ) / (dX); % F is the rhs to dA/dt
- 
-%F(end) = ( -FL(end)-FR(end) + abs(tmpU(end)).*( tmpA(end-1) - tmpA(end) ) ) / 2 ; 
 
 Alamtrhs = F; 
-
-%Arhs(end) = Arhs(end)-lamt; 
 
  %% Solve for w at next time step with finite volumes  (semi-implicit, parabolic)
  % Assemble matrices

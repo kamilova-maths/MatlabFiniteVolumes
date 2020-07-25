@@ -34,8 +34,8 @@ end
 figure; 
 tvectorint = t*ones(1,2*K+1);
 xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
-contourf(tvectorint, xvectorint,uint,20,'LineColor', 'none')
-%caxis([1 5])
+contourf(tvectorint, xvectorint,uint,300,'LineColor', 'none')
+caxis([1 5])
 ax = gca;
 ax.YDir = 'reverse';
 if sav==1

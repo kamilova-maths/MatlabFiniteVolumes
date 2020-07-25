@@ -36,6 +36,8 @@ if st == 1
     plot(x0cel,tempsteady,'--')
     thetadata = [thetadata, [x0cel(Kindices), tempsteady(Kindices)]];
 end
+ax = gca;
+ax.YDir = 'reverse';
 
 set(gca,'TickLabelInterpreter','latex','fontsize',13)
 if dat == 1
@@ -126,6 +128,63 @@ end
 title('P')
 xlabel('t')
 
+
+
+
+% video version
+myVideo = VideoWriter('PatternCase');
+myVideo.FrameRate = 10;
+open(myVideo)
+numel = 500;
+Nmax = find(t>2,1);  
+figure('units','normalized','outerposition',[0 0 0.5 1])
+%for i = 1:(floor(N/numel)):N
+ for i = 1:Nmax
+	subplot(2,2,4)
+	%plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)'), axis([0 L 0 (max(max(temp))+0.1)]);
+    plot(temp(i,:)',[xcel*lam(i);lam(i) + xcel*(L-lam(i))]), axis([0 (max(max(temp))+0.1) 0 L]);
+	hold on
+% 	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], temp(1,:)', '--'), axis([0 L 0 (max(max(temp))+0.1)]);
+% 	plot([lam(i),lam(i)], [0,max(max(temp))+0.1]);
+    plot(temp(1,:)', [xcel*lam(1);lam(1) + xcel*(L-lam(1))],'--'), axis([0 (max(max(temp))+0.1) 0 L]);
+	plot([0,max(max(temp))+0.1], [lam(i),lam(i)]);
+	hold off
+	title(strcat('T=',num2str(i*T/N)))
+	xlabel('Temperature')
+    ax = gca; ax.YDir='reverse';
+	subplot(2,2,1)
+% 	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)'), axis([0 L 0 (max(max(Acel))+0.1)]);
+% 	hold on
+% 	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--'), axis([0 L 0 (max(max(Acel))+0.1)]);
+    plot(Acel(i,:)',[xcel*lam(i);lam(i) + xcel*(L-lam(i))]), axis([0 (max(max(Acel))+0.1) 0 L]);
+	hold on
+	plot(Acel(1,:)',[xcel*lam(1);lam(1) + xcel*(L-lam(1))], '--'), axis([0 (max(max(Acel))+0.1) 0 L]);
+	hold off
+	xlabel('Area')
+    ax = gca; ax.YDir='reverse';
+    subplot(2,2,3)
+% 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)'), axis([0 L 0 (max(max(uint))+0.1)]);
+% 	hold on
+% 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)', '--'), axis([0 L 0 (max(max(uint))+0.1)]);
+    plot(uint(i,:)',[xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))]), axis([0 (max(max(uint))+0.1) 0 L]);
+	hold on
+	plot(uint(i,:)', [xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], '--'), axis([0 (max(max(uint))+0.1) 0 L]);
+	hold off
+	xlabel('Velocity')
+    ax = gca; ax.YDir='reverse';
+    subplot(2,2,2)
+    plot(t(1:Nmax),lam(1:Nmax),'b')
+    hold on
+    plot(t(i), lam(i),'ro');
+    hold off 
+	%pause(T/N)
+    ax = gca; ax.YDir='reverse';
+    pause(0.01)
+    frame = getframe(gcf); %get frame
+    writeVideo(myVideo, frame);
+end
+
+close(myVideo)
 return
 
 figure;

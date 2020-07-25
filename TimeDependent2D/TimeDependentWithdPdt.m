@@ -75,45 +75,8 @@ te=0;
 j=0;
 tvec=[];
 
-% fac = zeros(floor(T/d),1);
-% for i=1:floor(T/d)
-%     val = (i+1) - 4*floor((i)/4);
-%     if (val==1 || val==2)
-%         fac(i) = 1;
-%     else  
-%         fac(i) = 0;
-%     end
-%     
-% end
-
-% for i=1:floor(T/d)
-%     val = (i) - 7*floor((i-1)/7);
-%     if (val<=4)
-%         fac(i) = 3;
-%     elseif val== 5  
-%         fac(i) = 16;
-%     else 
-%         fac(i) = 0; 
-%     end
-%     
-% end
-
-% for i=1:floor(T/d)
-%     val = (i) - 7*floor((i-1)/7);
-%     if (val<=4)
-%         fac(i) = 2;
-%     elseif val==5  
-%         fac(i) = 6;
-%     else 
-%         fac(i) = 0; 
-%     end
-%     
-% end
-%fac = ones(size(fac));
 cyladd = []; 
-%fac = (sum(fac(1:7))./7).*ones(length(fac),1);
-%fac = sum(fac)/size(fac); 
-%fac = [1, 1, 1, 1, 3, 0, 0];
+
 tic
 
 while (isempty(te)==0)
@@ -127,14 +90,12 @@ while (isempty(te)==0)
         tspan = [0 T];
     else
              val = j- 7*floor((j-1)/7);
-             if (val<=4)
-                 fac = 2*c1;
-                elseif val== 5  
-                    fac = 20*c1;
+             if val== 5  
+                 fac = 20*c1;
              else 
-                    fac = c1; 
+                 fac = 2*c1;
              end
-        %fac = 0.4087; 
+        %fac =  0.4700; 
         cyladd = [cyladd; fac];
         y0(1:K) = ye(1:K);
         y0(1+K:2*K) = ye(K+1:2*K) ;
@@ -143,12 +104,7 @@ while (isempty(te)==0)
         %fac=1;
         y0(3*K+1) = ye(3*K+1)+D*St*(fac); 
         y0(3*K+2) = ye(3*K+2);  
-        Nmax = N - length(th(:,K)); 
-%         if Nmax > 50
-%         tout = linspace(te,T,Nmax) ;
-%         else
-%         tout = linspace(te,T,100) ;
-%         end
+
        tspan = [te T];
     end
 j=j+1;
@@ -185,7 +141,7 @@ end
 cylvec = [first, cyladd] ; 
 csvwrite('DStCyl.csv', cylvec); 
 A = Alamt./lam; 
-
+avg = sum(cyladd)/length(first) 
 toc
 
 % Save the solution from here and then import into steady state to see if
@@ -213,8 +169,8 @@ temp = [th, phi];		% complete temperature profile (theta and phi)
 
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
-    
-    
+
+
 if st==0
     xvector1 = [xcel*lam(end);lam(end) + xcel*(L-lam(end))];
     xvector2 = [xint*lam(end);lam(end) + xint(2:end)*(L-lam(end))];

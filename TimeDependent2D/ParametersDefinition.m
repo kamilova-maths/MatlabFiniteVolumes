@@ -21,8 +21,8 @@ h = 7;
 % Peclet number
 Pe = (rho*c*uc*Ldim)/(k);
 epsilon=R1/Ldim;
-St=(rho*g*Ldim^2)/(uc*mu0);
-%St = 10; 
+%St=(rho*g*Ldim^2)/(uc*mu0);
+St = 30; 
 %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
 
 Bi= ((Ldim^2)*h)/(k*R1); 
@@ -51,8 +51,8 @@ Q0 = Qscale*(x2dim-x1dim)/Ldim; % alternatively, Q0 can be whatever we make it
 % DeltaT =  (Q0*Ldim)/(rho*c*uc); 
 %gammaBar = 0.069; 
 gammaBar = 0.09; 
-Gamma = gammaBar*DeltaT; 
-%Gamma = 0 ;
+%Gamma = gammaBar*DeltaT; 
+Gamma = 0 ;
 %Q = Ldim/(x2dim - x1dim);
 Q = 1/(x2-x1); 
 tha = (T_a- T_in)/DeltaT; 
@@ -71,8 +71,9 @@ N= 800;
 K=300;
 
 % end of the domain
-T = 2*pi/0.5; L= 1; 
-
+%T = 2*pi/0.5;
+L= 1; 
+T = 5; 
 % We define non-dimensional day d
 d = 86400*uc/Ldim;
 

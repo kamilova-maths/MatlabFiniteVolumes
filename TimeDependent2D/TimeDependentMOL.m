@@ -17,10 +17,10 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300v1.csv');
+    data = csvread('SSK300P0p0672.csv');
 end
 
-P0=1;
+P0=0.0672;
 %P0t = @(t)D*St*c1; 
 P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
@@ -106,7 +106,7 @@ xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 if st==0
     xvector1 = [xcel*lam(end);lam(end) + xcel*(L-lam(end))];
     xvector2 = [xint*lam(end);lam(end) + xint(2:end)*(L-lam(end))];
-    SS = [xvector1; Acel(end,:)'; temp(end,:)'; xvector2; uint(end,:)'; lam(end)]; 
+    SS = [xvector1; Acel(end,:)'; temp(end,:)'; xvector2; uint(end,:)'; lam(end); P0]; 
     csvwrite('SSData.csv', SS); 
     disp('Remember to change the name of the file at the end. Include Gamma and K')
 end
@@ -116,11 +116,12 @@ end
 % have K terms
 % set to 1 if we want to save data in csv file 
 dat = 0; 
-
+sav= 0;
+P0tval = 0; 
 % plot(t,u(:,1),t,1./Aint(:,1))
 % hold on 
 % plot(t,lam)
 % 
 % u(end,1)
-PlottingTimesteps
-%PlottingContours
+%PlottingTimesteps
+PlottingContours
