@@ -34,8 +34,8 @@ end
 figure; 
 tvectorint = t*ones(1,2*K+1);
 xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
-contourf(tvectorint, xvectorint,uint,300,'LineColor', 'none')
-caxis([1 5])
+contourf(tvectorint, xvectorint,uint,20,'LineColor', 'none')
+caxis([min(min(uint)) 5])
 ax = gca;
 ax.YDir = 'reverse';
 if sav==1
@@ -51,14 +51,28 @@ plot(t, lam);
 hold on
 if P0tval==0
     plot(t,P);  
-    csvwrite('P.csv',[t, P])
+    if sav==1
+        csvwrite('P.csv',[t, P])
+    end
 else
     plot(t,P0t(t));
-    csvwrite('P0t.csv',[t, P0t(t)])
+    if sav==1
+        csvwrite('P0t.csv',[t, P0t(t)])
+    end
 end
-%plot(t,P0t(t));
-%plot([t(1),t(end)], [lam(1),lam(1)]);
 title('lambda and P')
 xlabel('t')
+
+figure;
+if uftval ==1
+    plot(t,uft(t));
+    if sav==1
+        csvwrite('uft.csv',[t,uft(t)]);
+    end
+end
+title('uf')
+xlabel('t')
+
+
 
 %code to save data 

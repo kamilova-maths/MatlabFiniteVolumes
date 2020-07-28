@@ -65,14 +65,15 @@ c1 = c1dim/Ldim;
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 % Discretisation in t
-N= 800; 
+N= 1500; 
 % Discretisation in x
 K=300;
 
 % end of the domain
 %T = 2*pi/0.5;
 L= 1; 
-T = 5; 
+extra = 0.01; 
+T = 2*pi+extra; 
 % We define non-dimensional day d
 d = 86400*uc/Ldim;
 
