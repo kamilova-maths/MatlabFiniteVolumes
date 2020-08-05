@@ -17,7 +17,7 @@ st = 1;
 if st == 1 
     % Change filename to match what we want to import 
     %data = csvread('SSK300avg2.csv');
-    data = csvread('SSK300Isothermal2.csv');
+    data = csvread('SSData.csv');
 end
 
 
@@ -77,11 +77,12 @@ while (isempty(te)==0)
         y0(K+2) = lam0;  
         tspan = [0 T];
     else
-             val = j- 7*floor((j-1)/7);
+        
+             val = j- 5*floor((j-1)/5);
              if val== 5  
-                 fac = 20*c1;
+                 fac = 3*c1;
              else 
-                 fac = 2*c1;
+                 fac = 1*c1;
              end
         %fac =  0.4700; 
         cyladd = [cyladd; fac];
@@ -159,6 +160,7 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 sav = 0; % indicator for saving data
-P0tval =0;
+P0tval = 0;
+uftval = 0; 
 %PlottingTimesteps
-PlottingContours
+%PlottingContours

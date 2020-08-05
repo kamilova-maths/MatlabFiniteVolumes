@@ -22,6 +22,7 @@ h = 7;
 Pe = (rho*c*uc*Ldim)/(k);
 epsilon=R1/Ldim;
 St=(rho*g*Ldim^2)/(uc*mu0);
+%St = 47;
 %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
 
 Bi= ((Ldim^2)*h)/(k*R1); 
@@ -65,7 +66,7 @@ c1 = c1dim/Ldim;
 % Calculating the initial conditions as a solution of the steady state
 % problem 
 % Discretisation in t
-N= 1500; 
+N = 800; 
 % Discretisation in x
 K=300;
 
@@ -73,7 +74,8 @@ K=300;
 %T = 2*pi/0.5;
 L= 1; 
 extra = 0.01; 
-T = 2*pi+extra; 
+%T = 2*pi+extra;
+T = 7; 
 % We define non-dimensional day d
 d = 86400*uc/Ldim;
 

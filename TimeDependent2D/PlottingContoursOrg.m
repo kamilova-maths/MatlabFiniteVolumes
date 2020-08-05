@@ -3,20 +3,16 @@ xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 %indx = N;
 % PLOTTING THETA
-patt = 5; 
-rep  = 20; 
-step = patt*rep+1;
+
 
 % % Save data to file
 figure;
 title('Temperature')
 tvector = t*ones(1,2*K); 
-tvector = t*ones(1,2*K)-first(step); 
 xvector = [lam*xcel',lam + (L-lam)*xcel'];
 contourf(tvector, xvector,temp,20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-xlim([0 tvec(end)-first(step)])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Temperature.png')
@@ -30,7 +26,6 @@ xvector = [lam*xcel',lam + (L-lam)*xcel'];
 contourf(tvector, xvector,Acel, 20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-xlim([0 tvec(end)-first(step)])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'A.png')
@@ -38,10 +33,8 @@ end
 % PLOTTING U
 figure; 
 tvectorint = t*ones(1,2*K+1);
-tvectorint = t*ones(1,2*K+1)-first(step);
 xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
 contourf(tvectorint, xvectorint,uint,20,'LineColor', 'none')
-xlim([0 tvec(end)-first(step)])
 if max(max(uint))>5
     maxu = 5
 else
@@ -53,21 +46,20 @@ ax.YDir = 'reverse';
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')
-    csvwrite('lam.csv',[t-first(step), lam]);
+    csvwrite('lam.csv',[t, lam]);
    
    % csvwrite('P.csv',[t,P0t(t)]);
 end
 % PLOTTING lambda
 figure; 
-plot(t-first(step), lam);
-xlim([0 t(end)-first(step)])
+plot(t, lam);
+
 
 hold on
 if P0tval==0
-    plot(t-first(step),P);
-     xlim([0 t(end)-first(step)])
+    plot(t, P);
     if sav==1
-        csvwrite('P.csv',[t-first(step), P])
+        csvwrite('P.csv',[t, P])
     end
 elseif P0tval==1
     plot(t,P0t(t));
@@ -84,7 +76,7 @@ if uftval ==1
     title('uf')
     xlabel('t')
     if sav==1
-        csvwrite('uft.csv',[t,uft(t)]);
+        csvwrite('uft.csv',[omega*t,uft(t)]);
     end
 end
 

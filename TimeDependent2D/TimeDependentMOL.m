@@ -17,10 +17,10 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300P0p1831.csv');
+    data = csvread('SSData.csv');
 end
 
-P0=0.1831;
+P0= 0.1839;
 %P0t = @(t)D*St*c1; 
 P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
@@ -124,4 +124,4 @@ P0tval = 0;
 % 
 % u(end,1)
 %PlottingTimesteps
-PlottingContours
+PlottingContoursOrg

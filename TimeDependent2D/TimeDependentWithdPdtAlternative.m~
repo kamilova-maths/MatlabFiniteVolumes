@@ -96,24 +96,24 @@ for j=1:floor(T/d)
          
         val = j- 7*floor((j-1)/7);
             if val== 5   
-               %Pmax = 3*5*(D*St*c1 + 0.01) + 0.0257;
-               Pmax = 3*8*(D*St*c1);
+               Pmax = 3*5*(D*St*c1 + 0.01) + 0.0257;
+               %Pmax = 3*8*(D*St*c1);
             elseif val==6 || val == 7
                Pmax = 0.01; 
             else 
-               %Pmax = 5*(D*St*c1 + 0.01);
-               Pmax = 7*(D*St*c1);
+               Pmax = 5*(D*St*c1 + 0.01);
+               %Pmax = 7*(D*St*c1);
             end
             
        k=0;
        
        while (Pend<Pmax)
-            %Pend = Pend+dPend;
-            Pend = Pend+onecyl;
+            Pend = Pend+dPend;
+            %Pend = Pend+onecyl;
             k=k+1;
         end
-        %cyladd = [cyladd; k*dPend];
-        cyladd = [cyladd; k*onecyl];
+        cyladd = [cyladd; k*dPend];
+        %cyladd = [cyladd; k*onecyl];
         
         y0(1:K) = y(end,1:K);
         y0(1+K:2*K) = y(end,K+1:2*K) ;
@@ -182,8 +182,8 @@ temp = [th, phi];		% complete temperature profile (theta and phi)
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 
-%indx = find(t==dvalues(27),1);
-%indx = indx+1; 
+indx = find(t==dvalues(27),1);
+indx = indx+1; 
 if st==0
     xvector1 = [xcel*lam(indx);lam(indx) + xcel*(L-lam(indx))];
     xvector2 = [xint*lam(indx);lam(indx) + xint(2:end)*(L-lam(indx))];

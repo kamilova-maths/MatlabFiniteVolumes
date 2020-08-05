@@ -1,22 +1,22 @@
 
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
-%indx = N;
+
 % PLOTTING THETA
-patt = 5; 
-rep  = 20; 
-step = patt*rep+1;
+
 
 % % Save data to file
 figure;
 title('Temperature')
-tvector = t*ones(1,2*K); 
-tvector = t*ones(1,2*K)-first(step); 
+tvector = omega*t*ones(1,2*K); 
+% Temperature doesn't look quite there? A tiny cheat: (Shift the whole
+% thing by 2*pi)
+tvector = tvector - 2*pi*ones(size(tvector));
 xvector = [lam*xcel',lam + (L-lam)*xcel'];
 contourf(tvector, xvector,temp,20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-xlim([0 tvec(end)-first(step)])
+xlim([0 2*pi])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Temperature.png')
@@ -25,23 +25,21 @@ end
 
 % PLOTTING A
 figure; 
-%tvector = t*ones(1,2*K); 
+tvector = omega*t*ones(1,2*K); 
 xvector = [lam*xcel',lam + (L-lam)*xcel'];
 contourf(tvector, xvector,Acel, 20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-xlim([0 tvec(end)-first(step)])
+xlim([0 2*pi])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'A.png')
 end
 % PLOTTING U
 figure; 
-tvectorint = t*ones(1,2*K+1);
-tvectorint = t*ones(1,2*K+1)-first(step);
+tvectorint = omega*t*ones(1,2*K+1);
 xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
 contourf(tvectorint, xvectorint,uint,20,'LineColor', 'none')
-xlim([0 tvec(end)-first(step)])
 if max(max(uint))>5
     maxu = 5
 else
@@ -50,61 +48,47 @@ end
 caxis([min(min(uint)) maxu])
 ax = gca;
 ax.YDir = 'reverse';
+xlim([0 2*pi])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')
-    csvwrite('lam.csv',[t-first(step), lam]);
-   
+    csvwrite('lam.csv',[omega*t, lam]);
    % csvwrite('P.csv',[t,P0t(t)]);
 end
 % PLOTTING lambda
 figure; 
-plot(t-first(step), lam);
-xlim([0 t(end)-first(step)])
-
+plot(omega*t, lam);
+xlim([0 2*pi])
 hold on
 if P0tval==0
-    plot(t-first(step),P);
-     xlim([0 t(end)-first(step)])
+    plot(omega*t,P);  
+    xlim([0 2*pi])
     if sav==1
-        csvwrite('P.csv',[t-first(step), P])
+        csvwrite('P.csv',[omega*t, P])
     end
 elseif P0tval==1
-    plot(t,P0t(t));
+    plot(omega*t,P0t(t));
+    xlim([0 2*pi])
     if sav==1
-        csvwrite('P0t.csv',[t, P0t(t)])
+        csvwrite('P0t.csv',[omega*t, P0t(t)])
     end
 end
 title('lambda and P')
 xlabel('t')
 
+
 if uftval ==1
     figure;
     plot(t,uft(t));
+    xlim([0 2*pi])
     title('uf')
-    xlabel('t')
+xlabel('t')
     if sav==1
         csvwrite('uft.csv',[t,uft(t)]);
     end
 end
 
 
-return
-
-%code to calculate average P0
 
 
-indx1 = find(t==first(step),1);
-
-
-
-space = length(first(step:end));
-space = space - 1; 
-indx2 = find(t==first(step+space),1);
-tbetween = t(indx1:indx2);
-
-[tbetween,index] = unique(tbetween);
-Pinterp = interp1(tbetween,P(index),linspace(t(indx1),t(indx2),length(tbetween)));
-mean(Pinterp)
-Paverage = sum(P(indx1:indx2))/(indx2-indx1)
-
+%code to save data 

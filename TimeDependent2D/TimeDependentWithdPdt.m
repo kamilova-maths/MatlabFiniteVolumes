@@ -89,13 +89,13 @@ while (isempty(te)==0)
         y0(3*K+2) = lam0;  
         tspan = [0 T];
     else
-             val = j- 7*floor((j-1)/7);
+             val = j- 5*floor((j-1)/5);
              if val== 5  
-                 fac = 20*c1;
+                 fac = 3*c1;
              else 
-                 fac = 2*c1;
+                 fac = 1*c1;
              end
-        %fac =  0.4700; 
+        %fac =  0.1400; 
         cyladd = [cyladd; fac];
         y0(1:K) = ye(1:K);
         y0(1+K:2*K) = ye(K+1:2*K) ;
@@ -139,6 +139,7 @@ tvec = [tvec; t];
 
 end
 cylvec = [first, cyladd] ; 
+cylvec(:,2) = cylvec(:,2)/c1;
 csvwrite('DStCyl.csv', cylvec); 
 A = Alamt./lam; 
 avg = sum(cyladd)/length(first) 
@@ -183,8 +184,9 @@ end
 % use X, we have K+1 terms, whereas at the bottom, where we use Xbar, we
 % have K terms
 % set to 1 if we want to save data in csv file 
-dat = 0; 
-sav = 0; % indicator for saving data
-P0tval =0;
+dat    = 0; 
+sav    = 0; % indicator for saving data
+P0tval = 0;
+uftval = 0; 
 %PlottingTimesteps
 PlottingContours

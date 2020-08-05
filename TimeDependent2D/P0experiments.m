@@ -54,7 +54,8 @@ y0(3*K+1) = lam0;
 
 %P0t = @(t)P0*cos(2*pi*t/0.1234);
 DeltaP = 0.5; 
-P0t = @(t) 1 + DeltaP.*sin(2*pi*t); % base case 
+omega = 2; 
+P0t = @(t) 1 + DeltaP.*sin(omega*t); % base case 
 %P0t = @(t) P0 + P0*sin(pi*t); % fewer oscillations than base case
 %P0t = @(t) P0 + P0*sin(4*pi*t); % more oscillations than base case
 
@@ -110,39 +111,6 @@ end
 dat = 0; 
 sav = 1; % indicator for saving data
 P0tval = 1;
+uftval = 0;
 %PlottingTimesteps
-PlottingContours
-
-
-				
-% We rescale X and Xbar in order to plot. Note that at the top, where we
-% use X, we have K+1 terms, whereas at the bottom, where we use Xbar, we
-% have K terms
-% % video version
-% figure('units','normalized','outerposition',[0 0 0.25 1])
-% for i = N/numel:(N/numel):N
-% 	subplot(3,1,1)
-% 	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], temp(i,:)'), axis([0 L 0 (max(max(temp))+0.1)]);
-% 	hold on
-% 	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], temp(1,:)', '--'), axis([0 L 0 (max(max(temp))+0.1)]);
-% 	plot([lam(i),lam(i)], [0,max(max(temp))+0.1]);
-% 	hold off
-% 	title(strcat('T=',num2str(i*T/N)))
-% 	ylabel('Temperature')
-% 	subplot(3,1,2)
-% 	plot([xcel*lam(i);lam(i) + xcel*(L-lam(i))], Acel(i,:)'), axis([0 L 0 (max(max(Acel))+0.1)]);
-% 	hold on
-% 	plot([xcel*lam(1);lam(1) + xcel*(L-lam(1))], Acel(1,:)', '--'), axis([0 L 0 (max(max(Acel))+0.1)]);
-% 	hold off
-% 	ylabel('Area')
-%   subplot(3,1,3)
-% 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)'), axis([0 L 0 (max(max(uint))+0.1)]);
-% 	hold on
-% 	plot([xint*lam(i);lam(i) + xint(2:end)*(L-lam(i))], uint(i,:)', '--'), axis([0 L 0 (max(max(uint))+0.1)]);
-% 	hold off
-% 	ylabel('Velocity')
-% 	pause(T/N)
-%     %pause(1)
-% end
-% 
-% 
+PlottingContoursOmegat

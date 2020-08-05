@@ -62,12 +62,12 @@ val = val2(:);
 tout = linspace(0,T,N);
 data = [];
 valvec = []; 
-
+omega = 1; 
 %% ODE integration 
 for j =1:length(val)
     DeltaP = val(j);
     %options = odeset('RelTol',[1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3],'AbsTol',[1.0e-04, 1.0e-06, 1.0e-06, 1.0e-04]);
-    P0t = @(t) 1 + DeltaP.*sin(2*pi*t); % base case 
+    P0t = @(t) 1 + DeltaP.*sin(omega*t); % base case 
     % Independent variable for ODE integration 
     %tspan = [0 T];
     tic

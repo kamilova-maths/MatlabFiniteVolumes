@@ -11,7 +11,7 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300.csv');
+    data = csvread('SSK300uft1.csv');
 end
 
 
@@ -52,30 +52,31 @@ y0(1+K:2*K) = A0.*th0;
 y0(2*K+1:3*K) = phi0;		
 y0(3*K+1) = lam0; 
 
-val1 = linspace(0.5,1,11)';
-val1 = [val1(1:end-1); linspace(1, 5.0, 20)'];
-
-val2 = [val1'; val1']; 
-val = val2(:); 
+val = linspace(0.5,1,11)';
+val = [val(1:end-1); linspace(1, 5.0, 20)'];
 
 %val = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4, 0.4, 0.5, 0.5];
 %val = 0.8;
 % In this case (unfortunately) I want to control the length of tout
-tout = linspace(0,T,N);
+
 data = [];
-valvec = []; 
+omegatmat = []; 
+options = odeset('RelTol', 1.0e-4, 'AbsTol', 1.0e-4);
+
 Deltau = 0.5; 
 %omega = 2 ;
 P0 = 1;
 P0t = @(t) P0; 
+Tmax = 5; 
 %% ODE integration 
 for j =1:length(val)
     omega = val(j);
-    %options = odeset('RelTol',[1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3],'AbsTol',[1.0e-04, 1.0e-06, 1.0e-06, 1.0e-04]);
+    tout = linspace(0,2*pi*Tmax/omega,N);
     uft = @(t) uf*(1 + Deltau.*sin(omega*t)); % base case 
     % Independent variable for ODE integration 
     %tspan = [0 T];
     tic
+    
    % [t,y] = ode15s(@coupledPde,tspan,y0); 
     [t,y] = ode15s(@coupledPdeuft,tout,y0); 
     toc
@@ -86,62 +87,34 @@ for j =1:length(val)
     th = y(:,K+1:2*K)./A;
     phi   = y(:,2*K+1:3*K);
 
-    % We calculate u with the solution for A, th and lam
-    u = zeros(size(A));
-    for i=1:N
-        u(i,:) = usolutionuft(A(i,:)',th(i,:)',lam(i),1,P0t(t(i)),uft(t(i)));   
-    end
+    % Saving data
     
-    if mod(j,2) == 0
-        valvec = [valvec, val];
-        data = [data, lam];
-    end;
+    indx = find(tout>=(2*pi*(Tmax-1))/omega,1);
+    data = [data, lam(indx:end)];
+    omegatmat = [omegatmat, omega*tout(indx:end)']; 
     
-    indx = N-1;
     y0(1:K) = Alamt(indx,:);
     y0(1+K:2*K) = A(indx,:).*th(indx,:);
     y0(2*K+1:3*K) = phi(indx,:);		
     y0(3*K+1) = lam(indx); 
-%     
-%     y0(1:K) = A0lamt;
-%     y0(1+K:2*K) = A0.*th0;
-%     y0(2*K+1:3*K) = phi0;		
-%     y0(3*K+1) = lam0; 
-
-
 end
 
-valmat = ones(N,1)*val1';
-omegatmat = tout'.*omega*ones(size(val1')); 
-min(min(data(1:indx,:)))
-max(max(data(1:indx,:)))
+[r,~] = size(omegatmat); 
+valmat = ones(r,1)*val';
+
+min(min(data))
+max(max(data))
 
 figure;
-contourf(tout',val1',data',20,'LineColor','none')
-colormap(jet)
-
-figure; 
-contourf(omegatmat,valmat,data,20,'LineColor','none')
-colormap(jet)
+contourf(omegatmat-2*pi*(Tmax-1),valmat,data,30,'LineColor','none')
+colormap(jet);
 xlim([0 2*pi])
-return
-indx = find(tout>1,1);
-contourf(tout(1:indx)',val1',data(1:indx,:)',20,'LineColor', 'none')
-colormap(jet)
-min(min(data(1:indx,:)))
-max(max(data(1:indx,:)))
-csvwrite('P0DeltaParameterSweep.csv',[tout(1:indx)', data(1:indx,:)]); 
+% 
+ csvwrite('4piminusomegatmatut.csv',4*pi-omegatmat);
+ csvwrite('valmatut.csv', valmat);
+ csvwrite('lamdataut.csv', data); 
+%axis off
+return 
 
-axis off
-print(gcf, '-dpng', '-r600', '-painters', 'P0DeltaSweep.png')
-%  csvwrite('SSData.csv', SS); 
-   % disp('Remember to change the name of the file at the end. Include Gamma and K')
+print(gcf, '-dpng', '-r600', '-painters', 'ufomegaSweepjet.png')
 
-% We rescale X and Xbar in order to plot. Note that at the top, where we
-% use X, we have K+1 terms, whereas at the bottom, where we use Xbar, we
-% have K terms
-% set to 1 if we want to save data in csv file 
-dat = 0; 
-sav = 0; % indicator for saving data
-P0tval = 1;
-%PlottingTimesteps

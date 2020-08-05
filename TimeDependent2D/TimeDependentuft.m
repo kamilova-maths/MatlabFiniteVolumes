@@ -20,7 +20,7 @@ if st == 1
     data = csvread('SSK300uft2.csv');
 end
 
-P0 = 0.7; 
+P0 = 1; 
 P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
 omega = 2; 
@@ -120,7 +120,7 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 sav= 0;
-P0tval = 1; 
+P0tval = 2; 
 uftval = 1; 
 % plot(t,u(:,1),t,1./Aint(:,1))
 % hold on 
@@ -128,4 +128,4 @@ uftval = 1;
 % 
 % u(end,1)
 %PlottingTimesteps
-PlottingContours
+PlottingContoursOrg

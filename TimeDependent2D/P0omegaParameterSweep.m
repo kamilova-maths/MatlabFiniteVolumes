@@ -52,21 +52,25 @@ y0(1+K:2*K) = A0.*th0;
 y0(2*K+1:3*K) = phi0;		
 y0(3*K+1) = lam0; 
 %val1 = [0.5; 1.0; 1.5; 2.0; 2.5; 3.0];
-val1 = linspace(0.5,1,11)';
-val1 = [val1(1:end-1); linspace(1, 5.0, 20)'];
-val2 = [val1'; val1']; 
-val = val2(:);
+val = linspace(0.5,1,11)';
+val = [val(1:end-1); linspace(1, 5.0, 20)'];
+%val = [0.5; 1; 5];
+%val2 = [val1'; val1']; 
+%val = val2(:);
 
 % In this case I want to control the length of tout
-tout = linspace(0,T,N);
+
 data = [];
-valvec = []; 
+omegatmat = []; 
 DeltaP = 0.5;
-options = odeset('RelTol', 1.0e-8, 'AbsTol', 1.0e-16);
+options = odeset('RelTol', 1.0e-4, 'AbsTol', 1.0e-4);
+% Maximum period
+Tmax = 5;
 %% ODE integration 
 for j =1:length(val)
     omega = val(j); 
-   
+    tout = linspace(0,2*pi*Tmax/omega,N);
+    
     P0t = @(t) 1 + DeltaP.*sin(omega*t); % base case 
     % Independent variable for ODE integration 
     %tspan = [0 T];
@@ -82,44 +86,31 @@ for j =1:length(val)
     A = Alamt./lam;
     th = y(:,K+1:2*K)./A;
     phi   = y(:,2*K+1:3*K);
-
-    % We calculate u with the solution for A, th and lam
-    u = zeros(size(A));
-    for i=1:N
-        u(i,:) = usolution(A(i,:)',th(i,:)',lam(i),1,P0t(t(i)));   
-    end
+        
+    % Saving data
     
-    if mod(j,2) == 0
-        valvec = [valvec, val];
-        data = [data, lam];
-    end;
-    
-    indx = find(tout>=2*pi/omega,1);
-    
+    indx = find(tout>=(2*pi*(Tmax-1))/omega,1);
+    data = [data, lam(indx:end)];
+    omegatmat = [omegatmat, omega*tout(indx:end)']; 
     y0(1:K) = Alamt(indx,:);
     y0(1+K:2*K) = A(indx,:).*th(indx,:);
     y0(2*K+1:3*K) = phi(indx,:);		
     y0(3*K+1) = lam(indx); 
-%     
-%     y0(1:K) = A0lamt;
-%     y0(1+K:2*K) = A0.*th0;
-%     y0(2*K+1:3*K) = phi0;		
-%     y0(3*K+1) = lam0; 
-
-
 end
+[r,~] = size(omegatmat); 
+valmat = ones(r,1)*val';
 
-valmat = ones(N,1)*val1';
-omegatmat = tout'*val1';
-min(min(data(1:indx,:)))
-max(max(data(1:indx,:)))
+min(min(data))
+max(max(data))
 
 figure;
-contourf(tout',val1',data',20,'LineColor', 'none')
-colormap(jet)
-figure;
-contourf(omegatmat,valmat,data,10,'LineColor','none')
+contourf(omegatmat-2*pi*(Tmax-1),valmat,data,30,'LineColor','none')
+colormap(jet);
 xlim([0 2*pi])
+
+csvwrite('4piminusomegatmat.csv',4*pi-omegatmat);
+csvwrite('valmat.csv', valmat);
+csvwrite('lamdata.csv', data); 
 %axis off
 return 
 
@@ -128,7 +119,7 @@ print(gcf, '-dpng', '-r600', '-painters', 'P0omegaSweepjet.png')
 csvwrite('P0omegaParameterSweep.csv',[tout', data]); 
 
 P0t2 = @(t,omega) 1+0.5.*sin(2*pi*t.*omega);
-csvwrite('P0tomegaDiscrete.csv', [tout', P0t2(t,val1')])
+csvwrite('P0tomegaDiscrete.csv', [tout', P0t2(t,val')])
 
    % disp('Remember to change the name of the file at the end. Include Gamma and K')
 
