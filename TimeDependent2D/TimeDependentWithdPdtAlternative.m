@@ -6,7 +6,7 @@ clc
 
 %% COMPUTE STEADY STATE
 % Define parameters
-global N K T D uf P0 c1 d St
+global N K T D uf P0 c1 d St Ldim
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
 
@@ -96,13 +96,19 @@ for j=1:floor(T/d)
          
         val = j- 7*floor((j-1)/7);
             if val== 5   
-               %Pmax = 3*5*(D*St*c1 + 0.01) + 0.0257;
-               Pmax = 3*8*(D*St*c1);
+              %Pmax = uc*(24*60*60)*3/Ldim+ 0.01;
+               %Pmax = 3*0.3456/Ldim + 0.01; 
+               %Pmax = 3*0.6912/Ldim + 0.01;
+               Pmax = 3*0.5/Ldim + 0.01;
+         
             elseif val==6 || val == 7
                Pmax = 0.01; 
             else 
-               %Pmax = 5*(D*St*c1 + 0.01);
-               Pmax = 7*(D*St*c1);
+               
+               %Pmax = uc*(24*60*60)/Ldim + 0.01 ;
+               %Pmax = 0.3456/Ldim + 0.01;
+              % Pmax = 0.6912/Ldim + 0.01;
+               Pmax = 0.5/Ldim +0.01; 
             end
             
        k=0;
@@ -149,8 +155,6 @@ th  = [th; y(:,K+1:2*K)./A];
 
 tvec = [tvec; t];
 tstart = tend; 
-extra = extra + 0.001;
-%k
 end
 A = Alamt./lam; 
 %avg = sum(cyladd)/length(first) 

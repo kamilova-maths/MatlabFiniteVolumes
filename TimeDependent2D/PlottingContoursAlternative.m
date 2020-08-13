@@ -10,12 +10,11 @@ step = patt*rep*d;
 list = patt*rep:floor(T/d);
 dvalues = d*list; 
 dvalues = dvalues-patt*rep*d; 
-cyladd = [0.1750; cyladd]; 
-cylvec = [dvalues', cyladd(patt*rep:end)] ; 
+cylvec = [dvalues(1:end-1)', cyladd(patt*rep:end)] ; 
 csvwrite('DStCyl.csv', cylvec); 
-njvalues = [dvalues',cylvec(:,2)./onecyl];
+njvalues = [dvalues(1:end-1)',cylvec(:,2)./onecyl];
 csvwrite('njvalues.csv',njvalues);
-
+csvwrite('height.csv',[njvalues(:,1), c1dim*njvalues(:,2)])
 
 % Save data to file
 figure;
@@ -63,8 +62,6 @@ if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')
     csvwrite('lam.csv',[t-step, lam]);
-   
-   csvwrite('P.csv',[t,P0t(t)]);
 end
 % PLOTTING lambda
 figure; 
@@ -77,11 +74,6 @@ if P0tval==0
      xlim([0 t(end)-step])
     if sav==1
         csvwrite('P.csv',[t-step, P])
-    end
-elseif P0tval==1
-    plot(t,P0t(t));
-    if sav==1
-        csvwrite('P0t.csv',[t, P0t(t)])
     end
 end
 title('lambda and P')

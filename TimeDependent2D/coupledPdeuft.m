@@ -1,6 +1,6 @@
 function yt = coupledPdeuft(t,y)
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q P0t uft
+global Pe Bi tha L K D x1 x2 Q P0t uft
 
 
 %% Extract the values from the vector

@@ -20,7 +20,7 @@ if st == 1
     data = csvread('SSData.csv');
 end
 
-P0= 0.1839;
+P0= 0.1579;
 %P0t = @(t)D*St*c1; 
 P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
@@ -117,7 +117,8 @@ end
 % set to 1 if we want to save data in csv file 
 dat = 0; 
 sav= 0;
-P0tval = 0; 
+P0tval = 2; 
+uftval =0;
 % plot(t,u(:,1),t,1./Aint(:,1))
 % hold on 
 % plot(t,lam)
