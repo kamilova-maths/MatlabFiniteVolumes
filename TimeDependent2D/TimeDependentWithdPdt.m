@@ -89,13 +89,13 @@ while (isempty(te)==0)
         y0(3*K+2) = lam0;  
         tspan = [0 T];
     else
-             val = j- 5*floor((j-1)/5);
-             if val== 5  
-                 fac = 3*c1;
-             else 
-                 fac = 1*c1;
-             end
-        %fac =  0.1400; 
+%              val = j- 5*floor((j-1)/5);
+%              if val== 5  
+%                  fac = 3*c1;
+%              else 
+%                  fac = 1*c1;
+%              end
+        fac =  0.2800; 
         cyladd = [cyladd; fac];
         y0(1:K) = ye(1:K);
         y0(1+K:2*K) = ye(K+1:2*K) ;

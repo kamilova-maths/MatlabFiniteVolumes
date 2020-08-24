@@ -20,7 +20,7 @@ if st == 1
     data = csvread('SSData.csv');
 end
 
-P0= 0.1579;
+P0= 0.0556;
 %P0t = @(t)D*St*c1; 
 P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
@@ -102,7 +102,7 @@ temp = [th, phi];		% complete temperature profile (theta and phi)
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
     
-  
+st = 0 ;  
 if st==0
     xvector1 = [xcel*lam(end);lam(end) + xcel*(L-lam(end))];
     xvector2 = [xint*lam(end);lam(end) + xint(2:end)*(L-lam(end))];

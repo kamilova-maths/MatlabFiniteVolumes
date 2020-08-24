@@ -3,10 +3,12 @@ xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 %indx = N;
 % PLOTTING THETA
-patt = 1; 
-rep  = 20; 
-step = patt*rep*d;
+% patt = 1; 
+% rep  = 20; 
+% step = patt*rep*d;
 
+%step = 0.1728; %one day, from a two day computation  
+step =T-5*d; % the last 5 periods of 45 minutes
 % Save data to file
 figure;
 title('Temperature')
@@ -43,7 +45,7 @@ xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
 contourf(tvectorint, xvectorint,uint,80,'LineColor', 'none')
 xlim([0 tvec(end)-step])
 maxu = max(max(uint))
-caxis([min(min(uint)) maxu])
+caxis([min(min(uint)) max(max(uint))])
 ax = gca;
 ax.YDir = 'reverse';
 if sav==1
@@ -64,7 +66,7 @@ if uftval ==1
     title('uf')
     xlabel('t')
     if sav==1
-        csvwrite('uft.csv',[t,uftvec]);
+        csvwrite('uft.csv',[t-step,uftvec]);
     end
 end
 

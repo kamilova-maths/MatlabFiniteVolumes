@@ -1,10 +1,11 @@
-global Pe Bi tha N K Gamma St T L D uf x1 x2 Q Ldim uc c1 c1dim
+global Pe Bi tha N K Gamma St T L D uf x1 x2 Q Ldim uc c1 c1dim P0
 
 rho= 1.8*10^3; %Bergstrom ; 
 g = 10; 
 c= 900; % Fitt and Howell
 Ldim=5; % Temperature Profiles in Soderberg Electrodes
 uc = 10^-5; %Bergstrom approximation
+%uc = 5.4*10^(-3); % Periodic value (where the total sum still corresponds to Bergstrom approx.
 %uc = 0.5/(24*60*60); % actual estimated value
 R0=0.5;
 R1=1; 
@@ -24,7 +25,7 @@ Pe = (rho*c*uc*Ldim)/(k);
 epsilon=R1/Ldim;
 St=(rho*g*Ldim^2)/(uc*mu0);
 %St = 47;
-%P0 = (10000*Ldim)/((R1^2)*uc*mu0);
+P0 = (10000*Ldim)/((R1^2)*uc*mu0);
 
 Bi= ((Ldim^2)*h)/(k*R1); 
 
@@ -58,13 +59,13 @@ Gamma = gammaBar*DeltaT;
 Q = 1/(x2-x1); 
 tha = (T_a- T_in)/DeltaT; 
 %tha=0;
-%uf = 1; 
-uf = 0.5/(uc*24*60*60); 
+uf = 1; 
+%uf = 0.5/(uc*24*60*60); 
 %uf = 0.3456/(uc*24*60*60); 
 %uf = 0.6912/(uc*24*60*60); 
 
-c1dim = 0.5; 
-%c1dim = 1;
+%c1dim = 0.5; 
+c1dim = 1; % Aasgeir, 17/08/2020 - this is the best one to use
 %c1dim = 0.75;
 c1 = c1dim/Ldim; 
 % Pe = 37.8; St = 8.8; P0 =0.7; Bi = 114.3; tha=0.005; D = 0.25; 
@@ -82,9 +83,15 @@ K=300;
 L= 1; 
 extra = 0.01; 
 %T = 2*pi+extra;
-T = 7; 
+%T = 2*0.1728; 
+
 % We define non-dimensional day d
 d = 86400*uc/Ldim;
+% When I found the oscillatory state and I just want to extract the last
+% bit
+%T = (d/32)*10;
 
-
+% When I want to find the oscillatory state [this takes quite a long time,
+% but it is effective]
+T =14*d;
 %pertb =@(t) 0.5+0.5*sin(2*pi*t/d);

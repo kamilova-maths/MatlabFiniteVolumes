@@ -4,19 +4,28 @@ xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 %indx = N;
 % PLOTTING THETA
 patt = 5; 
-rep  = 20; 
-step = patt*rep+1;
+rep  = 5; 
+step = patt*rep;
 
+
+% For pattern, the above step now starts at where the large addition is. In
+% order to get t=0 to be somewhere 'reasonable', I need to shift another
+% extra bit, which I choose to be the large t spacing / 3, i.e.
+
+extrabit = 3*(first(step+1) - first(step))/4; 
+%0.0194 has been calculated specifically for the constant case, in order to
+%start the peaks at the same place. For pattern, remove this constant. For
+%a different comparison, you must calculate the shift yourself.
+shift = first(step)+extrabit-0.0194; 
 % % Save data to file
 figure;
 title('Temperature')
-tvector = t*ones(1,2*K); 
-tvector = t*ones(1,2*K)-first(step); 
+tvector = t*ones(1,2*K)-shift; 
 xvector = [lam*xcel',lam + (L-lam)*xcel'];
 contourf(tvector, xvector,temp,20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-xlim([0 tvec(end)-first(step)])
+xlim([0 tvec(end)-shift])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Temperature.png')
@@ -30,18 +39,18 @@ xvector = [lam*xcel',lam + (L-lam)*xcel'];
 contourf(tvector, xvector,Acel, 20,'LineColor', 'none')
 ax = gca;
 ax.YDir = 'reverse';
-xlim([0 tvec(end)-first(step)])
+xlim([0 tvec(end)-shift])
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'A.png')
 end
 % PLOTTING U
 figure; 
-tvectorint = t*ones(1,2*K+1);
-tvectorint = t*ones(1,2*K+1)-first(step);
+
+tvectorint = t*ones(1,2*K+1)-shift;
 xvectorint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
 contourf(tvectorint, xvectorint,uint,20,'LineColor', 'none')
-xlim([0 tvec(end)-first(step)])
+xlim([0 tvec(end)-shift])
 if max(max(uint))>5
     maxu = 5
 else
@@ -53,21 +62,21 @@ ax.YDir = 'reverse';
 if sav==1
     axis off
     print(gcf, '-dpng', '-r600', '-painters', 'Velocity.png')
-    csvwrite('lam.csv',[t-first(step), lam]);
+    csvwrite('lam.csv',[t-shift, lam]);
    
    % csvwrite('P.csv',[t,P0t(t)]);
 end
 % PLOTTING lambda
 figure; 
-plot(t-first(step), lam);
-xlim([0 t(end)-first(step)])
+plot(t-shift, lam);
+xlim([0 t(end)-shift])
 
 hold on
 if P0tval==0
-    plot(t-first(step),P);
-     xlim([0 t(end)-first(step)])
+    plot(t-shift,P);
+     xlim([0 t(end)-shift])
     if sav==1
-        csvwrite('P.csv',[t-first(step), P])
+        csvwrite('P.csv',[t-shift, P])
     end
 elseif P0tval==1
     plot(t,P0t(t));
@@ -77,17 +86,6 @@ elseif P0tval==1
 end
 title('lambda and P')
 xlabel('t')
-
-if uftval ==1
-    figure;
-    plot(t,uft(t));
-    title('uf')
-    xlabel('t')
-    if sav==1
-        csvwrite('uft.csv',[t,uft(t)]);
-    end
-end
-
 
 return
 

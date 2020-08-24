@@ -17,10 +17,10 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300uft2.csv');
+    data = csvread('SSData.csv');
 end
 
-P0 = 1; 
+P0 = 0.0412; % average P value for the Pattern case, CS 2a 
 P0t =@(t) P0;
 %P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
 % Initial conditions
@@ -72,19 +72,33 @@ y0(3*K+1) = lam0;
 
 % Independent variable for ODE integration 
 tstart = 0;
-d = d/2;
+d = d/(32); 
+%d = d/2;
 for j=1:floor(T/d)
     tstart
     tend = j*d;
 %% ODE integration 
-    if mod(j,2)==0
-        uft = @(t) 1.5;
-    else
-        uft = @(t) 0.5;
-    end
+    % Changing per day - evenly distributed
+%     if mod(j,2)==0
+%         uft = @(t) 1.5;
+%     else
+%         uft = @(t) 0.5;
+%     end
+    
+    % Changing within a day - unevenly distribuited
+    dayfrac = (5/2700).*d;
+    %uft = @(t) 2.*(t>(tend-dayfrac));
+    %uft = @(t) (540).*(t<=(dayfrac+tstart));
+    % When I change uc instead of uf
+     uft = @(t) (1).*(t<=(dayfrac+tstart));
+    %uft = @(t) 2.*(t>=(tend-dayfrac)) + 0.9565.*(t<(tend-dayfrac));
+    % A check
+    %uft = @(t) 1;
     tic
     tspan = [tstart tend] ; 
-    [t,y] = ode15s(@coupledPdeuft,tspan,y0); 
+    tout = linspace(tstart,tend,200);
+    %[t,y] = ode15s(@coupledPdeuft,tspan,y0); 
+    [t,y] = ode15s(@coupledPdeuft,tout,y0); 
     toc
 
     Alamt   = [Alamt; y(:,1:K)]; % This is A from X=0 to X=1 (this is, 0<x<lambda)
@@ -114,7 +128,8 @@ for j=1:floor(T/d)
         unew(i,:) = usolutionuft(Anow(i,:)',(y(i,K+1:2*K)./Anow(i,:))',y(i,3*K+1),1,P0t(t(i)),uft(t(i)));   
     end
     u = [u; unew]; 
-    uftvec = [uftvec; uft(t)*ones(length(t),1)];
+    %uftvec = [uftvec; uft(t)*ones(length(t),1)];
+    uftvec = [uftvec; uft(t)];
 end
 
 N = length(tvec); 
@@ -135,6 +150,7 @@ xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
     
 indx = find(t>pi,1); 
 indx = indx +1; 
+indx = length(t);
 if st==0
     xvector1 = [xcel*lam(indx);lam(indx) + xcel*(L-lam(indx))];
     xvector2 = [xint*lam(indx);lam(indx) + xint(2:end)*(L-lam(indx))];
