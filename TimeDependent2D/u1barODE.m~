@@ -1,0 +1,23 @@
+% Code to determine u1bar. We have one first order and one second order ODE
+% to solve for u1bar and A1bar, for the case where A1bar includes the
+% multiple scales part. This is the isothermal case, and we need to already
+% have the solutions u0bar, A0, dA0dx, du0dx, Pinbar, St, and all of that lovely
+% stuff%
+
+function 
+dx = (xtop(end)-xtop(1))./(length(xtop)-1);
+dA0dx = derivative(A0,dx);
+du0dx = derivative(u0bar,dx);
+%du0dxdx = derivative(du0dx,dx); % there should be better ways to calculate these  
+du0dxdx = (-St*A0 - 3*dA0dx.*du0dx)./(3*A0);
+
+[xout,y] = ode45(@(x,y)odefunU1bar(x,y,xtop,A0, dA0dxSt),[xtop(1) xtop(end)],[0; 0]);
+P1bar = y(:,1); 
+u1bar = y(:,2);
+
+figure;
+plot(xout,A1bar)
+hold on 
+plot(xout,u1bar)
+
+

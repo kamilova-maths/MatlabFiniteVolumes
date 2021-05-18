@@ -1,7 +1,45 @@
-%function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPdeWithdPdt(t,y)
+% DATE:  2020
+%
+% DESCR:    yt = coupledPdeWithPdt(t,y)
+%           Code that encapsulates the partial differential equations for 
+%           the time dependent version of the flow and temperature problem, 
+%           where we additionally solve for dPdt. There are no events
+%           associated with this function.
+%           We use the method of lines here, so we construct the matrices
+%           for the x discretisation here, whereas the t discretisation is
+%           being done automatically in the main code by ode15s.
+%           Additionally, ode15s.m invokes this code. 
+%
+% INPUT: 
+%           t:  Particular t value using by the internal MATLAB routine
+%           ode15s.m
+%           y:  Long vector that includes all the variables of interest. It
+%           is of the same length as y0, the initial condition vector,
+%           provided in the main code that invokes ode15s.m
+% OUTPUT:   yt: Vector of the time derivatives for each variable of
+%           interest. 
+% ADDITIONAL COMMENTS: 
+%           This code uses should be run for a certain amount of time or 
+%           until some condition is satisfied so that we obtain some kind
+%           of balance in the dPdt equation. Otherwise, P will just
+%           decrease over time and become negative. This code should be
+%           used in control systems designed to model the lowering of paste
+%           cylinders into electrode casings.
+%
+% ASSOCIATED FUNCTIONS:
+%           ParametersDefinition : This is where all the parameters are
+%           set, according to the specific need of the example.
+%           bvpinit, bvp4c: to solve the ODEs
+%           usolution: Routine that solves the u problem, which is
+%           independent of time, so it does not need to be in the time
+%           vector. We compute the form of u at each timestep t to use it
+%           in the temperature and area equations. 
+%           EventFunction: Checks if P is smaller than some set tolerance,
+%           and interrupts the computation if that's the case.
+
 % One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q St d uin uval 
+global Pe Bi tha L K D uf x1 x2 Q St
 
 
 %% Extract the values from the vector
@@ -29,32 +67,22 @@ Xbar = linspace(0,1,K+1)';
 %% Finite volumes for A 
 u = usolution( A, th, lam, 1, P);
 
-%lamt = 1+(dudx/dAdx);
-u0t = P.*(lam.*dX)/(3*(A(1)-2*D+A(1)));
-%Pt = D*St.*(- u0t);
 Pt = D*St.*(- u(1));
 
-%Pt = D*St.*(uval- u(1));
-
-%Pt = D*St.*(uin(t)- u(1))
-%lamt = 1+(1./Aint(end) -u(end))/(2*(1-A(end)));  % compute lamt with the edges
-lamt = 1+(uf -u(end))/(2*(1-A(end)));  % compute lamt with the edges
+lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
 
 tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1 
-%tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
-% add ghost node to A
+
 
 tmpA = [2*D-A(1); A; 1]; % extend A by 1
-%tmpA = [D; A; 1];
+
  
 FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
 F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
 
-% This works but doesn't change the slow changing drift. I think my other
-% control system is better anyway 
-%F(end) = 1 - lamt;
+
 
 F  = ( F(1:end-1) - F(2:end) ) / (dX); % F is the rhs to dA/dt
 
@@ -103,8 +131,6 @@ Fp = (FLp + FRp - abs(tmpU).*(tmphi(2:end) - tmphi(1:end-1) ) ) / 2 - ...
     (tmphi(2:end)-tmphi(1:end-1)) ./ (dXbar.*Pe*(L-lam)); 
 Fp(1) = (FLp(1) + FRp(1) - abs(tmpU(1)).*(tmphi(2) - tmphi(1) ) ) / 2 - ...
     2*(tmphi(2)-tmphi(1)) ./ ((dXbar*(L-lam) + dX*lam)*Pe); 
-% Fp(1) = uga;	% nah, this won't work: it's only the laplacian part of the
-% flux that's influenced by the different dX
 
 % Calculate flux differences
 Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam).*dXbar) ; 

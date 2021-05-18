@@ -1,3 +1,29 @@
+% DATE:     2020 
+% DESCR:    TimeDependentuft
+%           Main code for time dependent problem imposing a time dependent
+%           uft(t) . Uses ParametersDefinition, coupledPdeuft, and 
+%           usolution to solve pdes. 
+%
+% INPUT: 
+%           No input variables
+%          
+% OUTPUT:   Main outcomes: 
+%           Acel: The N x 2*K matrix storing the cell values for A 
+%           uint: The N x (2*K +1) matrix storing all interface values for
+%           u
+%           temp: The N x (2*K) matrix that stores cell values for
+%           temperature
+% ADDITIONAL COMMENTS: 
+%
+% ASSOCIATED FUNCTIONS:
+%           ParametersDefinition : This is where all the parameters are
+%           set, according to the specific need of the example.
+%           coupledPde: This is where the pdes are, that will be then
+%           solved with method of lines with ode15s
+%           PlottingFiles/ContoursOrg: Code where we plot and save the data for
+%           the contours to illustrate the results computed here. 
+%          
+
 % Clear previous files
 close all 
 clear all
@@ -5,10 +31,11 @@ clear all
 
 %% COMPUTE STEADY STATE
 % Define parameters
-global N K T D P0t P0 uf uft
 
+global P0t uft
 % We define all of the parameters in an external routine for clarity 
 ParametersDefinition
+
 
 options = odeset('RelTol',1.0e-4,'AbsTol',1.0e-4);
 
@@ -17,15 +44,37 @@ st = 1;
 
 if st == 1 
     % Change filename to match what we want to import 
-    data = csvread('SSK300uft2.csv');
+    %Options for filenames: Regular parameter values with
+    
+    % SSDataP01.csv :  P0 = 1  (K=300)
+    % SSK300P0p5.csv :  P0 = 0.5 (K=300)
+    % SSKDataPeBi1.csv : P0 = 1, Pe = Bi = 1 (K=300)
+    % SSDataP0Bi10.csv : P0 = 1, Bi = 10 (K=300)
+    % SSDataP0Bi27.csv : P0 = 1, Pe = Bi = 27 (K=300)
+    % SSDataP0Bi100.csv : P0 = 1, Bi = 100 (K=300)
+    % SSDataP0BiPe10.csv : P0 = 1, Bi = Pe = 10 (K = 300) 
+    % SSDataP01Gamma15.csv : P0 = 1, Gamma = 15 
+    % SSDataPeBiGamma1.csv : P0 = Pe = Bi = Gamma = 1
+    % SSDataPeBiGamma10.csv: P0 = Pe = Bi = 1, Gamma = 10
+    % SSDataPeBiGamma1K500.csv : P0 = Pe = Bi = Gamma = 1, K = 500
+    % SSDataPeBi1Gamma1K300Qexp.csv : P0 = Pe = Bi = Gamma = 1, K =300, Q
+    % is a Gaussian (smooth continuous function of x)
+    % SSDataPeBiB27Gamma23K300Qexp.csv : P0 = 1, Q is a Gaussian 
+    % SSDatauftomega2Deltaup5.csv: P0 = 1, K = 300, uft with omega 2 and
+    % Deltau 0.5
+    data = csvread('TextFiles/SSDatauftomega2Deltaup5.csv');
 end
 
-P0 = 1; 
 P0t =@(t) P0;
-%P0t = @(t) P0 + 0.7*P0*sin(2*pi*t); % base case 
+
+% We define uft as a sinusoidal function 
 omega = 2; 
-DeltaU = 0.5;
-uft = @(t) uf.*(1+DeltaU*sin(omega*t));
+Deltau = 0.5;
+% to make the extraction of data easier at the end, T will be in terms of
+% this omega
+n = 5; % how many periods do we want to run this for
+T= 2*pi*n/omega; 
+uft = @(t) uf + Deltau*sin(omega*t);
 % Initial conditions
 
 % incon can be steady to check return to steady, or simple, which is just
@@ -35,9 +84,6 @@ incon = 'steady';
 
 switch incon
     case 'simple'
-
-        %A0 = (1- 1e-5 -D).*linspace(0,1,K)'+D; 
-        
         A0 = (1- D).*linspace(0,1,K+1)'+D; 
         A0 = (A0(1:end-1)+A0(2:end))/2; 
         th0 = zeros(K,1); 
@@ -61,17 +107,20 @@ y0(3*K+1) = lam0;
 % Independent variable for ODE integration 
 
 %% ODE integration 
-
+l = 0;
 tic
-tspan = [0 T] ; 
-tout = linspace(0,T,N);
-[t,y] = ode15s(@coupledPdeuft,tspan,y0); 
+if l == 1
+    tout  = linspace(0,T,N);
+    [t,y] = ode15s(@coupledPdeuft,tout,y0); 
+else
+    tspan = [0 T] ; 
+    [t,y] = ode15s(@coupledPdeuft,tspan,y0); 
+    N = length(t); 
+end
+
 toc
 
-N = length(t); 
-
 Alam  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
-
 
 phi   = y(:,2*K+1:3*K);
 
@@ -80,8 +129,7 @@ lam = y(:,3*K+1);
 A = Alam./lam;
 
 th = y(:,K+1:2*K)./A;
-% Save the solution from here and then import into steady state to see if
-% it actually converges to a steady state
+
 
 %% We calculate u with the solution for A, th and lam
 u = zeros(size(A));
@@ -94,7 +142,7 @@ end
 thtop = [ zeros(N,1), ...
        th         ];
 
-Acel = [ A, ones(N,K)];														% A (cell values)
+Acel = [ A, ones(N,K)];		% A (cell values)
 Aint = ([2*D*ones(N,1) - A(:,1), A ] + [ A, ones(N,1)] )/2;  % A (interfaces)
 uint  = [ u , ...
 					uft(t).*ones(N,K+1) ];
@@ -104,13 +152,12 @@ temp = [th, phi];		% complete temperature profile (theta and phi)
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
     
-indx = find(t>pi,1); 
-indx = indx +1; 
+indx = N;
 if st==0
     xvector1 = [xcel*lam(indx);lam(indx) + xcel*(L-lam(indx))];
     xvector2 = [xint*lam(indx);lam(indx) + xint(2:end)*(L-lam(indx))];
     SS = [xvector1; Acel(indx,:)'; temp(indx,:)'; xvector2; uint(indx,:)'; lam(indx); P0]; 
-    csvwrite('SSData.csv', SS); 
+    csvwrite('TextFiles/SSDatauftomega2Deltau5.csv', SS); 
     disp('Remember to change the name of the file at the end. Include Gamma and K')
 end
 
@@ -119,13 +166,13 @@ end
 % have K terms
 % set to 1 if we want to save data in csv file 
 dat = 0; 
-sav= 0;
+
 P0tval = 2; 
 uftval = 1; 
-% plot(t,u(:,1),t,1./Aint(:,1))
-% hold on 
-% plot(t,lam)
-% 
-% u(end,1)
-%PlottingTimesteps
-PlottingContoursOrg
+
+prompt = 'Do you want to plot stuff ? (yes == 1) \n ';
+j = input(prompt);
+if j ==1 
+    run('PlottingFiles/ContoursOrg')
+    %run('PlottingFiles/Timesteps')
+end

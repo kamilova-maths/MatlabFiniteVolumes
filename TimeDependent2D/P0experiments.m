@@ -10,8 +10,9 @@ ParametersDefinition
 st = 1; 
 
 if st == 1 
-    % Change filename to match what we want to import 
-    data = csvread('SSK300P0p5.csv');
+    % Change filename to matcth what we want to import 
+    data = csvread('All1Omega100n105.csv');
+    %    data = csvread('All1Gamma10.csv');
 end
 
 
@@ -53,20 +54,29 @@ y0(2*K+1:3*K) = phi0;
 y0(3*K+1) = lam0; 
 
 %P0t = @(t)P0*cos(2*pi*t/0.1234);
-DeltaP = 0.5; 
-omega = 2; 
-P0t = @(t) 1 + DeltaP.*sin(omega*t); % base case 
+%P0 = 1; 
+omega = 100;
+DeltaP = 0.8/P0; 
+n = 105;
+T= 2*pi*n/omega;
+%T = 10; 
+
+%DeltaP = 0.2;
+P0t = @(t) P0 + DeltaP.*sin(omega*t); % base case 
+
 %P0t = @(t) P0 + P0*sin(pi*t); % fewer oscillations than base case
 %P0t = @(t) P0 + P0*sin(4*pi*t); % more oscillations than base case
 
 % Independent variable for ODE integration 
 tspan = [0 T];
+tout = linspace(0,T,N);
 
 %% ODE integration 
-%options = odeset('RelTol',[1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3],'AbsTol',[1.0e-04, 1.0e-06, 1.0e-06, 1.0e-04]);
+options = odeset('RelTol',1.0e-3,'AbsTol',1.0e-6);
 
 tic
-[t,y] = ode15s(@coupledPde,tspan,y0); 
+%[t,y] = ode15s(@coupledPde,tspan,y0); 
+[t,y] = ode15s(@coupledPde,tout,y0,options); 
 toc
 N = length(t);
 Alamt  = y(:,1:K); % This is A from X=0 to X=1 (this is, 0<x<lambda)
@@ -95,12 +105,12 @@ temp = [th, phi];		% complete temperature profile (theta and phi)
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
     
-    
+st=0;    
 if st==0
     xvector1 = [xcel*lam(end);lam(end) + xcel*(L-lam(end))];
     xvector2 = [xint*lam(end);lam(end) + xint(2:end)*(L-lam(end))];
-    SS = [xvector1; Acel(end,:)'; temp(end,:)'; xvector2; uint(end,:)'; lam(end); P0t(t(end))]; 
-    csvwrite('SSData.csv', SS); 
+    SS = [xvector1; Acel(end,:)'; temp(end,:)'; xvector2; uint(end,:)'; lam(end-1); P0t(t(end))]; 
+    csvwrite('NewFile.csv', SS); 
     disp('Remember to change the name of the file at the end. Include Gamma and K')
 end
 
@@ -109,8 +119,8 @@ end
 % have K terms
 % set to 1 if we want to save data in csv file 
 dat = 0; 
-sav = 1; % indicator for saving data
+sav = 0; % indicator for saving data
 P0tval = 1;
 uftval = 0;
 %PlottingTimesteps
-PlottingContoursOmegat
+%PlottingContoursOmegat

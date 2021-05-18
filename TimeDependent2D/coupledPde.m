@@ -1,22 +1,58 @@
-%function [ th, A, u, x, t ] = TimeDependentFDfullMOL( th0, A0, D, gamma, P0, Pe, St, Bi, tha, T, L, K, N,uf,plt)
 function yt = coupledPde(t,y)
-% One vector to two vectors
-global Pe Bi tha L K D uf x1 x2 Q P0t P0
+% DATE:  2020
+%
+% DESCR:    yt = coupledPde(t,y)
+%           Code that encapsulates the partial differential equations for 
+%           the time dependent version of the flow and temperature problem.
+%           We use the method of lines here, so we construct the matrices
+%           for the x discretisation here, whereas the t discretisation is
+%           being done automatically in the main code by ode15s.
+%           Additionally, ode15s.m invokes this code. 
+%
+% INPUT: 
+%           t:  Particular t value using by the internal MATLAB routine
+%           ode15s.m
+%           y:  Long vector that includes all the variables of interest. It
+%           is of the same length as y0, the initial condition vector,
+%           provided in the main code that invokes ode15s.m
+% OUTPUT:   yt: Vector of the time derivatives for each variable of
+%           interest. 
+% ADDITIONAL COMMENTS: 
+%           This code uses P0t, a time dependent version of P0. If we want 
+%           to use a constant P0t, the best way is to set the time
+%           dependent function to be solely defined by P0.  
+%
+% ASSOCIATED FUNCTIONS:
+%           ParametersDefinition : This is where all the parameters are
+%           set, according to the specific need of the example.
+%           bvpinit, bvp4c: to solve the ODEs
+%           usolution: Routine that solves the u problem, which is
+%           independent of time, so it does not need to be in the time
+%           vector. We compute the form of u at each timestep t to use it
+%           in the temperature and area equations. 
 
 
-%% Extract the values from the vector
-Alam = y(1:K); 
-w = y(K+1:2*K); 
+% We invoke the global variables that are used for the pdes. 
+global Pe Bi tha L K D uf x1 x2 Q P0t 
 
-phi = y(2*K+1:3*K);
+
+%% We extract the values from the vector 
+Alam = y(1:K); % Alam is the multiplication of A times lambdat
+w = y(K+1:2*K); % w is the multiplication of A times theta, for x \leq to lam
+
+phi = y(2*K+1:3*K); % temperature for x>lam
 lam = y(3*K+1); 
 A = Alam./lam; 
 
 th = w./A; 
-Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source  
 
-%Qth = @(x) Qvalue*(x>x1/lam).*(x<x2/lam);   % heat source
-%Qphi = @(x) Qvalue*(x<((L-x1)./(L-lam))).*(x>((L-x2)./(L-lam)));    % heat source at the bottom
+% We can let Qfun be a smooth or a non-smooth function of x.
+
+% Piecewise linear function of x
+Qfun = @(x) Q*(x>x1).*(x<x2);    % heat source  - non-smooth
+
+% Gaussian approximation as heat source. 
+%Qfun = @(x) Q.*exp(-((x-((x2-x1)./2+x1)).^2)./(2*((x2-x1)).^2));
 
 %% discretisation parameters - these correspond to the interfaces. 
 % - left part of domain [0,\lambda]
@@ -29,33 +65,29 @@ Xbar = linspace(0,1,K+1)';
 
 
 
-%% Finite volumes for A 
+%% A finite volumes scheme for A 
+
+% We solve for u, with current A, theta, lambda, rescaled domain ending at
+% 1, and P0t at the current timestep. 
+% note: the rescaled domain always goes from 0 to 1, because actually it
+% goes from 0 to lambda. 
+
 u = usolution( A, th, lam, 1, P0t(t));
-% Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  
-Aint = ([ 2*D-A(1); A] + [A;1] ) / 2;  % A at the interfaces
-
-
-% dudx = (1/2).*(uf-u(end))/(lam*dX);
-% dAdx = 2*(1-A(end))/(lam*dX + (L-lam)*dXbar);
-% lamt = 1+(dudx/dAdx);
 
 lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
-%uf = 1./Aint(end);  
 tmpU = [u; uf ] -lamt.*X ; % size K+1 x 1 
-%tmpU = [u; 1./Aint(end) ] -lamt.*X ; % size K+1 x 1 
+
 % add ghost node to A
 tmpA = [2*D-A(1); A; 1]; % extend A by 1
-%tmpA = [D; A; 1]; % extend A by 1
-% S = -A.*lamt./(lam); 
+
 FL = tmpA(1:end-1).*tmpU;
 FR = tmpA(2:end  ).*tmpU;
+
 F  = ( FL+FR + abs(tmpU).*( tmpA(1:end-1) - tmpA(2:end) ) ) / 2 ;
-%F(1) = D*tmpU(1); % now here
 F  = ( F(1:end-1) - F(2:end) ) / (dX); % F is the rhs to dA/dt
-%F(1) = D*u(1); % now here
+
 Alamrhs = F; 
-%Arhs(end) = Arhs(end)-lamt; 
 
 
  %% Solve for w at next time step with finite volumes  (semi-implicit, parabolic)
@@ -103,8 +135,6 @@ Fp = (FLp + FRp - abs(tmpU).*(tmphi(2:end) - tmphi(1:end-1) ) ) / 2 - ...
     (tmphi(2:end)-tmphi(1:end-1)) ./ (dXbar.*Pe*(L-lam)); 
 Fp(1) = (FLp(1) + FRp(1) - abs(tmpU(1)).*(tmphi(2) - tmphi(1) ) ) / 2 - ...
     2*(tmphi(2)-tmphi(1)) ./ ((dXbar*(L-lam) + dX*lam)*Pe); 
-% Fp(1) = uga;	% nah, this won't work: it's only the laplacian part of the
-% flux that's influenced by the different dX
 
 % Calculate flux differences
 Fp = (Fp(1:end-1) - Fp(2:end) ) ./((L-lam).*dXbar) ; 
