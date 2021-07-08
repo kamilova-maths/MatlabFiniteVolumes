@@ -35,7 +35,39 @@
 prompt   = 'Do you wish to save data? (yes == 1) ';
 sav      = input(prompt);
 
-cylvec   = [first, cyladd] ;
+
+
+patt     = 5; 
+prompt   = 'How many repetitions of the pattern length would you like to see ? \n';
+k        = input(prompt);
+rep      = length(first)/patt-k; 
+step     = round(patt*rep);
+
+
+% For pattern, the above step now starts at where the large addition is. In
+% order to get t=0 to be somewhere 'reasonable', I need to shift another
+% extra bit, which I choose to be the large t spacing / 3, i.e.
+
+extrabit = 3*(first(step+1) - first(step))/4; 
+
+%For the constant case,we want t0 to start at 0.0374, which is when the pattern
+% case starts. So, we must add a value calculated specifically for the constant case.
+% For pattern, remove this constant. For
+%a different comparison, you must calculate the shift yourself.
+shift = first(step) + 3*(first(step+1) - first(step)) + 0.0761;%+extrabit ;%- 0.0938; % The 0.0938 value is a fitting that I do to make
+% the peak of the addition for 'day' 1, to match the one for CS2 . This is
+% for figure 3.2.6 in my thesis, probably, hopefully
+if m == 1
+    
+else
+    pat_t0 = 0.0374;
+    val = first-shift; 
+    extrashift = pat_t0-val(find(val>0,1)); 
+    shift = shift-extrashift; %+ add_shift; %-0.0194;
+end
+
+
+cylvec   = [first-shift, cyladd] ;
 % c1 is the non-dimensional length of the cylinders. 
 % here, cylvec is the number of cylinders added at each timestep
 cylvec(:,2) = cylvec(:,2)/c1;
@@ -47,28 +79,6 @@ if sav == 1
 end
 
 
-
-patt     = 5; 
-prompt   = 'How many repetitions of the pattern length would you like to see ? \n';
-k        = input(prompt);
-rep      = length(first)/patt-k; 
-step     = patt*rep;
-
-
-% For pattern, the above step now starts at where the large addition is. In
-% order to get t=0 to be somewhere 'reasonable', I need to shift another
-% extra bit, which I choose to be the large t spacing / 3, i.e.
-
-extrabit = 3*(first(step+1) - first(step))/4; 
-
-%0.0194 has been calculated specifically for the constant case, in order to
-%start the peaks at the same place. For pattern, remove this constant. For
-%a different comparison, you must calculate the shift yourself.
-if m == 1
-    shift = first(step)+extrabit; 
-else
-    shift = first(step)+extrabit-0.0194; 
-end
 tnew = t - shift; 
 indx = find(tnew>0,1); 
 indx = indx -1;

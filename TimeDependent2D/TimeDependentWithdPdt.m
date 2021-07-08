@@ -128,12 +128,12 @@ while (isempty(te)==0)
         if m == 1
              val = j- 5*floor((j-1)/5);
              if val == 5  
-                 fac = 3*c1;
+                 fac = 10*c1;
              else 
-                 fac = 1*c1;
+                 fac = 3*c1;
              end
         else
-        fac =  0.2800; 
+        fac =  5*c1; 
         end
         
         cyladd        = [cyladd; fac];

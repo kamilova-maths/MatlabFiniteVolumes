@@ -63,7 +63,7 @@ if st == 1
     % PeBiGamma1Omega100Qexp
     % PeBi27Omega100Qexp
     % PeBi27Omega300Qexp
-    data = csvread('TextFiles/PeBiGamma1Omega100Qexp.csv');
+    data = csvread('TextFiles/SSDataP01.csv');
 end
 
 % We set the value for P0t, a time dependent version of imposed P0. If you

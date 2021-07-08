@@ -33,6 +33,7 @@ omegatnew = omega*t-2*pi*(n-1);
 indx = find(omegatnew>0,1);
 indx = indx - 1; 
 omegatmat = (omega*t-2*pi*(n-1))*ones(1,K);
+omegat = omega*t - 2*pi*(n-1); 
 xmat = ones(N,1)*linspace(0,L,K); 
 
 prompt = 'Do you wish to save data? (yes == 1) ';
@@ -42,7 +43,7 @@ while r == 1
 
 prompt = [' Which plots do you want to produce? \n ', ...
         'Temperature == 1 \n ', 'Area == 2 \n ', 'Velocity == 3 \n ', ...
-        'Everything else == 4 \n ' ];
+        'Everything else == 4 \n '];
 
     plt = input(prompt);
     prompt = ' Would you like to fix the axes ? (yes == 1 )';

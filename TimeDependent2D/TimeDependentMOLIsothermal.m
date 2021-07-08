@@ -47,6 +47,27 @@ uin   = @(t) 1/D; % this is what it should be
 
 % Plots for steady state - 1 , no plots for steady state - 0
 plt   = 0;
+
+prompt = ' Would you like constant P0 (input == 0) or sinusoidal P0 (input == 1) ? ';
+p = input(prompt);
+
+if p == 0
+    prompt = ' What value of P0 would you like to set ? ';
+    P0  = input(prompt);
+    P0t =@(t) P0;
+elseif p == 1
+    prompt = ' What value of P0 would you like to set ? ';
+    P0  = input(prompt);
+    prompt = ' Amplitude for P0 (as fraction of P0 ) ';
+    DeltaP = input(prompt);
+    prompt = ' Frequency for P0 ' ;
+    omega = input(prompt);
+    prompt = ' How many periods shall we run ? ';
+    n = input(prompt);
+    T= 2*pi*n/omega;
+    P0t = @(t) P0 + DeltaP.*sin(omega*t); % base case 
+end
+
 %% CALCULATING ANALYTIC SOLUTION FOR CHOSEN PARAMETERS.
 % NOTE THAT THE EXACT SOLUTION IS ONLY DEFINED UP TO LAM0. It is assumed
 % that A is 1 afterwards and lambda stays constant. 
@@ -84,9 +105,9 @@ A0   = (Aex(1:end-1) + Aex(2:end))./2;
 % Here I compare the calculated u with the exact u, inputting the
 % analytical value of A. Discrepancy results from the discretisation error.
 
-ucalc = usolution(A0,zeros(size(A0)),lam0,L,P0);
+%ucalc = usolution(A0,zeros(size(A0)),lam0,L,P0);
 
-max(abs(ucalc-u0));
+%max(abs(ucalc-u0));
 
 
 %% USING TIME DEPENDENT SOLVER 
@@ -102,11 +123,12 @@ initial = 'steady';
 switch initial
     case 'simple'
         %% AWAY FROM STEADY STATE
+        lamhat = 0.4;
         Ainitial = (1- D).*linspace(0,1,K+1)'+D; 
         Ainitial = (Ainitial(1:end-1)+Ainitial(2:end))/2;
-        y0(1:K)  = Ainitial; 
+        y0(1:K)  = Ainitial*lamhat; 
 
-        y0(1+K)  = 0.7;
+        y0(1+K)  = lamhat;
 
     case 'steady'
         %% STEADY STATE
@@ -118,29 +140,12 @@ end
 %% ODE INTEGRATION
 reltol  = 1.0e-6; abstol = 1.0e-8; %% CHANGING TOLERANCE DIDN'T DO ANYTHING
 options = odeset('RelTol',reltol,'AbsTol',abstol);
-prompt = ' Would you like constant P0 (input == 0) or sinusoidal P0 (input == 1) ? ';
-p = input(prompt);
+
 
 % We can either use simple conditions (which satisfy the boundary
 % conditions) to evolve our solution to a steady state, or from a nearby
 % steady state, to refine a current understanding of steady state. 
 
-if p == 0
-    prompt = ' What value of P0 would you like to set ? ';
-    P0  = input(prompt);
-    P0t =@(t) P0;
-elseif p == 1
-    prompt = ' What value of P0 would you like to set ? ';
-    P0  = input(prompt);
-    prompt = ' Amplitude for P0 (as fraction of P0 ) ';
-    DeltaP = input(prompt);
-    prompt = ' Frequency for P0 ' ;
-    omega = input(prompt);
-    prompt = ' How many periods shall we run ? ';
-    n = input(prompt);
-    T= 2*pi*n/omega;
-    P0t = @(t) P0 + DeltaP.*sin(omega*t); % base case 
-end
 % We can either use tout or tspan, depending on user input
 prompt = 'Do you want to fix N ? (yes == 1) ' ;
 l = input(prompt);
@@ -256,5 +261,5 @@ if sav == 1
     csvwrite('TextFiles/ASteadywithlambda1constantmu.csv', [xsteadycel([1, 5:5:K]), A0([1, 5:5:K])])
     csvwrite('TextFiles/uwithlambda1constantmu.csv',udata); 
     csvwrite('TextFiles/uSteadywithlambda1constantmu.csv', [xsteadyint([1, 5:5:K]), u0([1, 5:5:K])])
-    csvwrite('TextFiles/lambdaconstantmup5.csv', [t,lam])
+    csvwrite('TextFiles/lambdaconstantmup4.csv', [t(1:20:end),lam(1:20:end)])
 end

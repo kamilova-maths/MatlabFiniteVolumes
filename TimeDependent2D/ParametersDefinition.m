@@ -1,6 +1,6 @@
 global Pe Bi tha N K Gamma St T L D uf x1 x2 Q Ldim uc c1 c1dim P0 eps
 
-params = 'diff';
+params = 'stand';
 switch(params)
     case 'stand'
         rho= 1.8*10^3; %Bergstrom ; 
@@ -28,16 +28,17 @@ switch(params)
         epsilon=R1/Ldim;
         St=(rho*g*Ldim^2)/(uc*mu0);
         %St =37;
-        %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
+        P0 = (10000*Ldim)/((R1^2)*uc*mu0);
         %P0 = 0.1;
-        P0 = 1; 
+        %P0 = 1; 
         Bi= ((Ldim^2)*h)/(k*R1); 
         %Bi =100;
         %disp('Remember Bi is 27')
         %Bi = Pe;
         %tha = 0.005; 
-        D = (R0^2)/(R1^2); 
-
+        %D = (R0^2)/(R1^2); 
+        D = 0.5;
+        %D = 0.18;
         %This is the area of the clamps, taken from Temperature profiles ... 
         x1dim = 5-2;
         x2dim = 6.5-2; 
@@ -58,8 +59,8 @@ switch(params)
         % DeltaT =  (Q0*Ldim)/(rho*c*uc); 
         %gammaBar = 0.069; 
         gammaBar = 0.09; 
-        %Gamma = gammaBar*DeltaT; 
-        Gamma = 10 ;
+        Gamma = gammaBar*DeltaT; 
+        %Gamma = 23 ;
         %Q = Ldim/(x2dim - x1dim);
         Q = 1/(x2-x1); 
         tha = (T_a- T_in)/DeltaT; 
@@ -79,20 +80,20 @@ switch(params)
         % Calculating the initial conditions as a solution of the steady state
         % problem 
         % Discretisation in t
-        N = 2000; 
+        N = 20000; 
         % Discretisation in x
-        K=300;
+        K=1500;
 
         % end of the domain
         %T = 2*pi/0.5;
-        L= 1; 
+        L= 3; 
         T = 5;
-        extra = 0.01; 
-        %T = 2*pi+extra;
-        %T = 2*0.1728; 
-
-        % We define non-dimensional day d
-        d = 86400*uc/Ldim;
+        
+        CFL = 4*(T/(N-1)) / (L/(K-1));
+        
+        if CFL>=1
+            disp('This probably wont work')
+        end
         
     case 'diff'
         rho= 1.8*10^3; %Bergstrom ; 
@@ -119,7 +120,8 @@ switch(params)
         %Pe = (rho*c*uc*Ldim)/(k);
         Pe = 1;
         epsilon=R1/Ldim;
-        St=(rho*g*Ldim^2)/(uc*mu0);
+        %St=(rho*g*Ldim^2)/(uc*mu0);
+        St = 1;
         %St =37;
         %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
         %P0 = 0.1;
@@ -130,6 +132,7 @@ switch(params)
         %Bi = Pe;
         %tha = 0.005; 
         D = (R0^2)/(R1^2); 
+        
 
         %This is the area of the clamps, taken from Temperature profiles ... 
         x1dim = 5-2;
@@ -153,7 +156,7 @@ switch(params)
         gammaBar = 0.09; 
         %Gamma = gammaBar*DeltaT; 
         %Gamma = 1; 
-        Gamma = 0 ;
+        Gamma = 23 ;
         %Q = Ldim/(x2dim - x1dim);
         
         tha = (T_a- T_in)/DeltaT; 
@@ -173,16 +176,17 @@ switch(params)
         % Calculating the initial conditions as a solution of the steady state
         % problem 
         % Discretisation in t
-        N = 2000; 
+        N = 8000; 
         % Discretisation in x
         K=300;
 
         % end of the domain
         %T = 2*pi/0.5;
-        L= 3; 
+        L= 1; 
         b = (x2-x1)./2 + x1; 
         c = x2-x1; 
         Q = (sqrt(2/pi))./(c.*(erf(b/(sqrt(2).*c)) - erf((b-L)./(sqrt(2).*c))));
+        Qfun = @(x) Q.*exp(-((x-((x2-x1)./2+x1)).^2)./(2*((x2-x1)).^2));
         %Q = 1/(x2-x1); 
         extra = 0.01; 
         %T = 2*pi+extra;
@@ -194,18 +198,3 @@ switch(params)
         disp('Bi is equal to Pe, Gamma is what it should, Qfun continuous, everything else is 1, K is 300')
         
 end
-
-        % When I found the oscillatory state and I just want to extract the last
-        % bit
-        %T = (d/32)*10;
-
-        % When I want to find the oscillatory state [this takes quite a long time,
-        % but it is effective]
-        %T =14*d;
-        %T = 21*d;
-        %n = 8;
-
-        %T = n*pi;
-        %T = 15;
-        %T = 5*d;
-        %pertb =@(t) 0.5+0.5*sin(2*pi*t/d);

@@ -29,7 +29,7 @@ function yt = coupledPdeIsothermal(t,y)
 %           independent of time, so it does not need to be in the time
 %           vector. We compute the form of u at each timestep t to use it
 %           in the temperature and area equations. 
-global K P0t D uf 
+global K P0t D uf L
 
 
 Alam = y(1:K); % Alam is the multiplication of A times lambdat
@@ -46,6 +46,7 @@ dX = 1/K;
 u = usolution(A,theta,lam,1,P0t(t)); 
 
 lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
+
 
 tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 
 

@@ -179,21 +179,19 @@ indx = indx -1;
 xint = linspace(0,1,K+1)';
 xcel = linspace(xint(2)/2,1-xint(2)/2,K)';
 
-xmatrix    = [lam*xcel',lam + (L-lam)*xcel'];
-xmatrixint =  [lam*xint',lam + (L-lam)*xint(2:end)'];
-xmat2      = lam*xcel';
-xmat1int   = lam*xint';
+xmatrix    = lam*xcel';
+xmatrixint = lam*xint';
 
 
 Anum     = zeros(N,K);
 u0barnum = zeros(N,K); 
 for i = 1:N
-    Anum(i,:) = interp1(xmatrix(i,:),Acel(i,:),linspace(0,L,K),'pchip'); 
+    Anum(i,:) = interp1(xmatrix(i,:),A(i,:),linspace(0,lam0,K),'pchip'); 
 end
 
 xforu = linspace(0,1,K+1)*lam0;
 for i = 1:N
-     u0barnum(i,:) = interp1(xmatrixint(i,:),uinterf(i,:),linspace(0,L,K),'pchip'); 
+     u0barnum(i,:) = interp1(xmatrix(i,:),u(i,:),linspace(0,lam0,K),'pchip'); 
 end
 
 
@@ -226,7 +224,7 @@ A1osc = A1tildenum(indx:end,:)-A1tilde_small;
 eta = @(x,tau) Xhat(x) - tau - vex(x).*phiex(tau);
 tau_long = linspace(-100*pi, 100*pi, N)'; 
 Fmat = interp1(arg(tau_long), Fx(tau_long),eta(xtop, omegat(indx:end)));
-
+sav=1;
 figure; 
 contourf(omegatmat(indx:end,:), xmat(indx:end,:), Fmat, 100,'LineColor', 'none')
 ax = gca;
@@ -240,7 +238,7 @@ set(gca, 'TickLabelInterpreter', 'latex');
 if sav==1
     axis off
     colorbar off
-    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/FmatOmega100Dp5.png')
+    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/FmatOmega50Dp18.png')
 
 end
 
@@ -255,12 +253,17 @@ caxis([min(min(Fmat)), max(max(Fmat))])
 if sav==1
     axis off
     colorbar off
-    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/A1OscOmega100Dp5.png')
+    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/A1OscOmega50Dp18.png')
 
 end
 G1Avg = mean(A1osc);
 u1Avg = u0Avg-uex(x);
 q = Aex(x).*u1Avg + uex(x).*G1Avg;
+
+valuesmatrix=[x',q'];
+csvwrite('xvsqOmega50Dp5.csv',valuesmatrix)
+
+
 %
 % 
 % Lam0 = psiex(lam0);
