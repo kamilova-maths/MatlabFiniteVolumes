@@ -99,13 +99,10 @@ end
 
 switch incon
     case 'simple'
-        
-        A0   = (1- D).*linspace(0,1,K+1)'+D; 
-        A0   = (A0(1:end-1)+A0(2:end))/2; 
         th0  = zeros(K,1); 
         phi0 = zeros(K,1);
         lam0 = 0.7;
-        
+        A0   = (1- D).*linspace(0,lam0,K)'./lam0+D; 
     case 'steady'
         A0   = data(2*K+1:3*K); 
 

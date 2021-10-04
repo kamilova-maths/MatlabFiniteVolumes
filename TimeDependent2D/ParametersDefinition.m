@@ -28,16 +28,16 @@ switch(params)
         epsilon=R1/Ldim;
         St=(rho*g*Ldim^2)/(uc*mu0);
         %St =37;
-        P0 = (10000*Ldim)/((R1^2)*uc*mu0);
+        %P0 = (10000*Ldim)/((R1^2)*uc*mu0);
         %P0 = 0.1;
-        %P0 = 1; 
+        P0 = 1; 
         Bi= ((Ldim^2)*h)/(k*R1); 
         %Bi =100;
         %disp('Remember Bi is 27')
         %Bi = Pe;
         %tha = 0.005; 
         %D = (R0^2)/(R1^2); 
-        D = 0.5;
+        D = 0.25;
         %D = 0.18;
         %This is the area of the clamps, taken from Temperature profiles ... 
         x1dim = 5-2;
@@ -60,7 +60,7 @@ switch(params)
         %gammaBar = 0.069; 
         gammaBar = 0.09; 
         Gamma = gammaBar*DeltaT; 
-        %Gamma = 23 ;
+        Gamma = 10 
         %Q = Ldim/(x2dim - x1dim);
         Q = 1/(x2-x1); 
         tha = (T_a- T_in)/DeltaT; 
@@ -80,20 +80,21 @@ switch(params)
         % Calculating the initial conditions as a solution of the steady state
         % problem 
         % Discretisation in t
-        N = 20000; 
+        N = 16000; 
         % Discretisation in x
-        K=1500;
+        K=300;
 
         % end of the domain
         %T = 2*pi/0.5;
-        L= 3; 
-        T = 5;
+        L= 1.5; 
+        T = 3;
+        d = 0.1728; 
         
-        CFL = 4*(T/(N-1)) / (L/(K-1));
-        
-        if CFL>=1
-            disp('This probably wont work')
-        end
+       % CFL = 4*(T/(N-1)) / (L/(K-1));
+%         
+%         if CFL>=1
+%             disp('This probably wont work')
+%         end
         
     case 'diff'
         rho= 1.8*10^3; %Bergstrom ; 

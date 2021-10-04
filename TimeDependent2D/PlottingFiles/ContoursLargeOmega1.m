@@ -245,9 +245,10 @@ prompt = [' Which plots do you want to produce? \n ', ...
             if sav == 1
                 csvwrite('SavedPlots/lam1tilde.csv',[tau(1:16:end),lam1tilde(1:16:end)]);
                 %csvwrite('SavedPlots/lam1tilde.csv',[tau,lam1tilde]);
-                csvwrite('SavedPlots/phitau.csv',[tau,phitau]);
-                csvwrite('SavedPlots/Pintilde.csv',[tau,Pintilde]);
+                %csvwrite('SavedPlots/phitau.csv',[tau,phitau]);
+                %csvwrite('SavedPlots/Pintilde.csv',[tau,Pintilde]);
                 csvwrite('SavedPlots/lam1tildeNum.csv',[(omega*t(indx:end)-2*pi*(n-1)), lam1tildenum(indx:end)])
+  
             end
     end
     prompt = 'Do you want to run the code again? (yes == 1 ) \n ';

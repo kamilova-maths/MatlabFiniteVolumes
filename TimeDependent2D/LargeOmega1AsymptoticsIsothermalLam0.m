@@ -129,10 +129,10 @@ switch(method)
     F   = sqrt(6*St*D-P0^2);
     a1 = atan(P0/F); 
     Pstar =  6*a1/(F); 
-    Aex   = @(x)(F^2/(6*St)).*tan(F.*(x+Pstar)./6).^2 - P0.^2./(6*St)+D ; 
+    Aex   = @(x) (F^2/(6*St)).*tan(F.*(x+Pstar)./6).^2 - P0.^2./(6*St)+D ; 
     uex = @(x) 1./Aex(x); 
     c0 = -DeltaP; 
-
+    
     phiex = @(tau) -DeltaP*cos(tau) ; 
     % Now we define the derivatives explicitly to prevent approximation errors
     % due to finite differences
@@ -159,6 +159,8 @@ switch(method)
     A1tilde_fun = @(x,tau) -phiex(tau)*dvex(x); 
     A1tilde = A1tilde_fun(xtop,tau) ;
      
+    lam1tilde_fun = @(tau) - phiex(tau)./(3.*dAex(lam0));
+    lam1tilde = lam1tilde_fun(tau);
       % Extra plots for Acal
     %figure; 
     arg = @(tau) -tau - D*uhatex(0)*phiex(tau);
@@ -168,9 +170,30 @@ switch(method)
     argtau = arg(tau);
     Fx2 = @(argtau) dvex(0)*phiex(tau);
     %plot(arg(tau),Fx(tau)); 
-    tau2 = linspace(0,2*pi,200)';
+    tau2 = linspace(-2*pi,4*pi,300)';
     valuesmatrix=[arg(tau2),Fx(tau2)];
-    csvwrite('PlottingFiles/SavedPlots/Feta.csv', valuesmatrix)
+    %csvwrite('PlottingFiles/SavedPlots/FetaTest.csv', valuesmatrix)
+    
+    Lam0 = integral(Aex,0,lam0); % this is the result of int_0^lam0 A0(x) dx 
+    
+    duex = @(x) -(((2.*(F.^3)*St.*sec((F.*x)./6 + a1).^2).*tan((F.*x)./6 + ... 
+    a1))./(P0.^2 - 6.*D.*St - (F.^2).*tan((F.*x)./6 + a1).^2).^2); % derivative of u0bar wrt x
+
+%     Fx3 = @(argtau,tau) dvex(0)*phiex(tau); % Fx for specific values of tau
+%     % first solve outside of the loop, so we can use the previous solution
+%     % as an initial guess at each point
+%     tau_short = linspace(0, 2*pi, 400)';
+%     lam1_val = zeros(size(tau_short));
+%     Flam = @(lam1) duex(lam0).*lam1 - (1/3).*phiex(tau_short(1))-Fx3(omega*Lam0+lam1-tau_short(1),tau_short(1));
+%      % options = optimset('Display','off');
+%     lam1_val(1) = fsolve(Flam, 0, options);
+%   
+%     for j = 2:length(tau_short)
+%         Flam = @(lam1) duex(lam0).*lam1 - (1/3).*phiex(tau_short(j))-Fx3(omega*Lam0+lam1-tau_short(j),tau_short(j));
+%         lam1_val(j) = fsolve(Flam, lam1_val(j-1));
+%     end
+    
+    
 end
 tval = t(end)-2*pi/omega; 
 indx = find(t>=tval,1);
@@ -210,9 +233,15 @@ A1tildenum  = omega*(Anum-ones(N,1)*AAvg);
 %A1tildenum2 = smooth(A1tildenum);
 
 lam1tildenum = omega*(lam-mean(lam(indx:end))); 
-
+%lam1tildenum =lam1tildenum-(1/omega)*mean(lam1tildenum); 
+% figure;
+% plot(omega*t(indx:end)-2*pi*(n-1),lam1tildenum(indx:end))
+% hold on 
+% plot(tau_short, lam1_val)
+% xlim([0 2*pi])
 
 run('PlottingFiles/ContoursLargeOmega1')
+
 
 % Subtracting A1tilde from A1tildenum to isolate just the oscillations
 omegat = omega*t - 2*pi*(n-1); 
@@ -224,7 +253,7 @@ A1osc = A1tildenum(indx:end,:)-A1tilde_small;
 eta = @(x,tau) Xhat(x) - tau - vex(x).*phiex(tau);
 tau_long = linspace(-100*pi, 100*pi, N)'; 
 Fmat = interp1(arg(tau_long), Fx(tau_long),eta(xtop, omegat(indx:end)));
-sav=1;
+%sav=1;
 figure; 
 contourf(omegatmat(indx:end,:), xmat(indx:end,:), Fmat, 100,'LineColor', 'none')
 ax = gca;
@@ -238,7 +267,7 @@ set(gca, 'TickLabelInterpreter', 'latex');
 if sav==1
     axis off
     colorbar off
-    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/FmatOmega50Dp18.png')
+    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/Fmat.png')
 
 end
 
@@ -253,15 +282,15 @@ caxis([min(min(Fmat)), max(max(Fmat))])
 if sav==1
     axis off
     colorbar off
-    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/A1OscOmega50Dp18.png')
+    print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/A1Osc.png')
 
 end
-G1Avg = mean(A1osc);
-u1Avg = u0Avg-uex(x);
-q = Aex(x).*u1Avg + uex(x).*G1Avg;
-
-valuesmatrix=[x',q'];
-csvwrite('xvsqOmega50Dp5.csv',valuesmatrix)
+% G1Avg = mean(A1osc);
+% u1Avg = u0Avg-uex(x);
+% q = Aex(x).*u1Avg + uex(x).*G1Avg;
+% 
+% valuesmatrix=[x',q'];
+% csvwrite('xvsqOmega50Dp5.csv',valuesmatrix)
 
 
 %

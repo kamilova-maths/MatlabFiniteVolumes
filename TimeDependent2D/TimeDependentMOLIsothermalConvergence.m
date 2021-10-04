@@ -87,7 +87,7 @@ end
 
 lam0 = lamex(St);
 %L = lam0;
-x     = linspace(0,lam0,K+1);
+x     = linspace(0,lam0,K);
 fac   = 6*St*D-P0^2;
 P0bar =  6*atan(P0./sqrt(fac))./(sqrt(fac)); 
 Aex   = (fac/(6*St)).*tan(sqrt(fac).*(x+P0bar)./6).^2 - P0.^2./(6*St)+D ; 
@@ -97,7 +97,7 @@ Aex   = (fac/(6*St)).*tan(sqrt(fac).*(x+P0bar)./6).^2 - P0.^2./(6*St)+D ;
 % cells, so I have to perform an averaging, of the form 
 u0   = 1./Aex'; 
 uf   = 1;
-%Aex  = [Aex'; 1];
+Aex  = [Aex'; 1];
 A0   = (Aex(1:end-1) + Aex(2:end))./2; 
 
 
@@ -119,28 +119,15 @@ A0   = (Aex(1:end-1) + Aex(2:end))./2;
 % computed steady state as initial condition, with the expectation that the
 % solution will quickly tend to this. 
 
-initial = 'steady';
+initial = 'simple';
 
 % WHEN CALCULATING CONVERGENCE TO ISOTHERMAL SOLUTION: you can either
 % define Ainitial from 0 to 1 and then average it, OR, define it with
 % linspace from 0 to lamhat, but then divided over lamhat. Otherwise at x=lamhat, 
 % 
-switch initial
-    case 'simple'
-        %% AWAY FROM STEADY STATE
-        lamhat = 0.7;
-        Ainitial = (1- D).*linspace(0,lamhat,K)'./lamhat+D; 
-       %Ainitial = (Ainitial(1:end-1)+Ainitial(2:end))/2;
-        y0(1:K)  = Ainitial*lamhat; 
 
-        y0(1+K)  = lamhat;
+lamhat = 0.7;
 
-    case 'steady'
-        %% STEADY STATE
-        y0(1:K)  = A0.*lam0; 
-        y0(1+K)  = lam0;
-
-end
 
 %% ODE INTEGRATION
 reltol  = 1.0e-6; abstol = 1.0e-8; %% CHANGING TOLERANCE DIDN'T DO ANYTHING
@@ -150,29 +137,53 @@ options = odeset('RelTol',reltol,'AbsTol',abstol);
 % We can either use simple conditions (which satisfy the boundary
 % conditions) to evolve our solution to a steady state, or from a nearby
 % steady state, to refine a current understanding of steady state. 
+gridsize = 10*2.^(0:9);
+errors_L2 = zeros(length(gridsize),3); % the errors matrix has three columns, 
+% one for lambda, one for A, and one for u
+for j = 1:length(gridsize)
+    N = gridsize(j);
+    K = gridsize(j);
+    y0 = zeros(1,K+1);
+    
+    % We calculate steady state each time so that it is the required length
+    x     = linspace(0,lam0,K);
+    Aex   = (fac/(6*St)).*tan(sqrt(fac).*(x+P0bar)./6).^2 - P0.^2./(6*St)+D ; 
 
-% We can either use tout or tspan, depending on user input
-prompt = 'Do you want to fix N ? (yes == 1) ' ;
-l = input(prompt);
-if l == 1 
+
+% Note that Aex is A evaluated at the nodes. I want to evaluate it at the
+% cells, so I have to perform an averaging, of the form 
+    u0   = 1./Aex'; 
+
+    Aex  = [Aex'; 1];
+    A0   = (Aex(1:end-1) + Aex(2:end))./2; 
+
+   
     tout  = linspace(0,T,N);
+    Ainitial = (1- D).*linspace(0,lamhat,K)'./lamhat+D; 
+       %Ainitial = (Ainitial(1:end-1)+Ainitial(2:end))/2;
+    y0(1:K)  = Ainitial*lamhat; 
+    y0(1+K)  = lamhat;
+    
     [t,y] = ode15s(@coupledPdeIsothermal,tout,y0,options);
 
-else
-    tspan = [0 T];
-    [t,y] = ode15s(@coupledPdeIsothermal,tspan,y0,options);
-    N     = length(t);
-end
-
-
-lam   = y(:,K+1);
-A     = y(:,1:K)./lam;
-u     = zeros(size(A));
-
-for i=1:N
+    lam   = y(:,K+1);
+    A     = y(:,1:K)./lam;
+    u     = zeros(size(A));
+    for i=1:N
     u(i,:) = usolution(A(i,:)',zeros(size(A(i,:)))',lam(i),1,P0t(t(i))); 
+    end
+    errors_L2(j,1) = sqrt((lam(end)^2-lam0));
+    errors_L2(j,2) = sqrt(sum((A(end,1:K)-A0').^2));
+    errors_L2(j,3) = sqrt(sum((u(end,1:K)-u0').^2));
 end
-     
+
+figure;
+%loglog(1./(gridsize).^2,err,'-o')
+loglog(1./(gridsize),errors_L2(:,1),'-o')
+
+
+
+return
 %  We construct u from A 
 Acel  = [ A, ones(N,K)];		
 Aint  = ([2*D*ones(N,1) - A(:,1), A ] + [ A, ones(N,1)] )/2;  % A (interfacess)
@@ -181,7 +192,7 @@ uinterf  = [ u , ...
 		uf.*ones(N,K+1) ];   
     
    
-return    
+    
 % rewrite below into external routine PlottingTimesteps
 %% PLOTTING THINGS - Feel free to comment it out as necessary
 
@@ -193,7 +204,7 @@ xint       = linspace(0,1,K+1)';
 % X values evaluated from 0 to lambda at the cells
 xcel       = linspace(xint(2)/2,1-xint(2)/2,K)';
 % x values from both sides, evaluated at the cells
-xvector1   = [xcel*lam(end);lam(end) + xcel*(L-lam(1))];
+xvector1   = [xcel*lam(1);lam(1) + xcel*(L-lam(1))];
 
 % steady state x values, evaluated at interfaces
 xsteadyint = linspace(0,lam0,K)';

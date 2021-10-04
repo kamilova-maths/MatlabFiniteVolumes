@@ -129,8 +129,10 @@ while (isempty(te)==0)
              val = j- 5*floor((j-1)/5);
              if val == 5  
                  fac = 10*c1;
-             else 
+             elseif val==2 || val==4 
                  fac = 3*c1;
+             else
+                 fac=4*c1;
              end
         else
         fac =  5*c1; 

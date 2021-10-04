@@ -168,9 +168,9 @@ switch(method)
     argtau = arg(tau);
     Fx2 = @(argtau) dvex(0)*phiex(tau);
     %plot(arg(tau),Fx(tau)); 
-    tau2 = linspace(0,2*pi,200)';
+    tau2 = linspace(-2*pi,4*pi,300)';
     valuesmatrix=[arg(tau2),Fx(tau2)];
-    csvwrite('PlottingFiles/SavedPlots/Feta.csv', valuesmatrix)
+    csvwrite('PlottingFiles/SavedPlots/FetaDelta1.csv', valuesmatrix)
 end
 tval = t(end)-2*pi/omega; 
 indx = find(t>=tval,1);
@@ -258,9 +258,9 @@ if sav==1
     print(gcf, '-dpng', '-r300', '-painters', 'PlottingFiles/SavedPlots/A1OscOmega100Dp5.png')
 
 end
-G1Avg = mean(A1osc);
-u1Avg = u0Avg-uex(x);
-q = Aex(x).*u1Avg + uex(x).*G1Avg;
+%G1Avg = mean(A1osc);
+%u1Avg = u0Avg-uex(x);
+%q = Aex(x).*u1Avg + uex(x).*G1Avg;
 %
 % 
 % Lam0 = psiex(lam0);

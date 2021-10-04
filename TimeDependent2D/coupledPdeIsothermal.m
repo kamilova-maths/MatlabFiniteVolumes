@@ -45,7 +45,10 @@ dX = 1/K;
 
 u = usolution(A,theta,lam,1,P0t(t)); 
 
-lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
+
+lamt = 1+(1-u(end))/(2*(1-A(end-1)));  % compute lamt with the edges
+
+%lamt = 1+(1-u(end))/(2*(1-A(end)));  % compute lamt with the edges
 
 
 tmpU = [ u; uf ] -lamt.*X ; % size K+1 x 1 

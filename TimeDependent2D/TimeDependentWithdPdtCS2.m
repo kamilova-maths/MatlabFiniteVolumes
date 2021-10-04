@@ -72,7 +72,7 @@ end
 % incon can be steady to check return to steady, or simple, which is just
 % linear A, th =0  everywhere 
 
-incon = 'simple'; 
+incon = 'steady'; 
 
 switch incon
     case 'simple'
