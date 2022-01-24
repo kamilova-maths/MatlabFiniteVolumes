@@ -1,5 +1,5 @@
 % DATE:     2020 
-% DESCR:    TimeDependentMOLIsothermal
+% DESCR:    TimeDependentMOLIsothermalGridconvergence
 %           Main code for time dependent problem in the isothermal case (Gamma = 0).
 %           Uses ParametersDefinition, coupledPdeIsothermal, and usolution to solve pdes. 
 %           First we calculate an analytical solution, where we choose the

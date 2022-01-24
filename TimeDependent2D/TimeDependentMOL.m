@@ -39,32 +39,27 @@ ParametersDefinition
 
 options = odeset('RelTol',1.0e-6,'AbsTol',1.0e-8);
 
-% set to 1 if we want to compare with steady state
-st = 0; 
+% Change filename to match what we want to import: 
+%Options for filenames: Regular parameter values with
 
-if st == 1 
-    % Change filename to match what we want to import: 
-    %Options for filenames: Regular parameter values with
-    
-    % SSDataP01.csv :  P0 = 1  (K=300)
-    % SSK300P0p5.csv :  P0 = 0.5 (K=300)
-    % SSKDataPeBi1.csv : P0 = 1, Pe = Bi = 1 (K=300)
-    % SSDataP0Bi10.csv : P0 = 1, Bi = 10 (K=300)
-    % SSDataP0Bi27.csv : P0 = 1, Pe = Bi = 27 (K=300)
-    % SSDataP0Bi100.csv : P0 = 1, Bi = 100 (K=300)
-    % SSDataP0BiPe10.csv : P0 = 1, Bi = Pe = 10 (K = 300) 
-    % SSDataP01Gamma15.csv : P0 = 1, Gamma = 15 
-    % SSDataPeBiGamma1.csv : P0 = Pe = Bi = Gamma = 1
-    % SSDataPeBiGamma10.csv: P0 = Pe = Bi = 1, Gamma = 10
-    % SSDataPeBiGamma1K500.csv : P0 = Pe = Bi = Gamma = 1, K = 500
-    % SSDataPeBi1Gamma1K300Qexp.csv : P0 = Pe = Bi = Gamma = 1, K =300, Q
-    % is a Gaussian (smooth continuous function of x)
-    % SSDataPeBiB27Gamma23K300Qexp.csv : P0 = 1, Q is a Gaussian 
-    % PeBiGamma1Omega100Qexp
-    % PeBi27Omega100Qexp
-    % PeBi27Omega300Qexp
-    data = csvread('TextFiles/SSDataP01.csv');
-end
+% SSDataP01.csv :  P0 = 1  (K=300)
+% SSK300P0p5.csv :  P0 = 0.5 (K=300)
+% SSKDataPeBi1.csv : P0 = 1, Pe = Bi = 1 (K=300)
+% SSDataP0Bi10.csv : P0 = 1, Bi = 10 (K=300)
+% SSDataP0Bi27.csv : P0 = 1, Pe = Bi = 27 (K=300)
+% SSDataP0Bi100.csv : P0 = 1, Bi = 100 (K=300)
+% SSDataP0BiPe10.csv : P0 = 1, Bi = Pe = 10 (K = 300) 
+% SSDataP01Gamma15.csv : P0 = 1, Gamma = 15 
+% SSDataPeBiGamma1.csv : P0 = Pe = Bi = Gamma = 1
+% SSDataPeBiGamma10.csv: P0 = Pe = Bi = 1, Gamma = 10
+% SSDataPeBiGamma1K500.csv : P0 = Pe = Bi = Gamma = 1, K = 500
+% SSDataPeBi1Gamma1K300Qexp.csv : P0 = Pe = Bi = Gamma = 1, K =300, Q
+% is a Gaussian (smooth continuous function of x)
+% SSDataPeBiB27Gamma23K300Qexp.csv : P0 = 1, Q is a Gaussian 
+% PeBiGamma1Omega100Qexp
+% PeBi27Omega100Qexp
+% PeBi27Omega300Qexp
+data = csvread('TextFiles/SSDataP01.csv');
 
 % We set the value for P0t, a time dependent version of imposed P0. If you
 % would like to compute the constant P0 value, set the function to be equal

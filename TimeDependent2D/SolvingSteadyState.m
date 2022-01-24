@@ -1,11 +1,28 @@
 function SolvingSteadyState()
+
+% DATE:     2018
+% DESCR:    SolvingSteadyState()
+%           Code for evaluating the steady state problem, where lambda is where A 
+%	    reaches 1 for the first time. 
+% INPUT: 
+%           No input variables
+%          
+% OUTPUT:   Main outcomes: 
+% 	    Plot of the Area A, Pressure P, and Temperature T for the steady problem
+%	    without cylinder addition            
+%
+% ADDITIONAL COMMENTS: 
+% 	    Modified version of Ian Hewitt's original code. Matches transfer of
+%           status work. 
+% 	    Realistic values were included for the data that is available from
+%           papers. 
+%
+% ASSOCIATED FUNCTIONS:
+%
+
 % 3 October 2018
 
-% Modified version of Ian Hewitt's original code. Matches transfer of
-% status work. 
 
-% Realistic values were included for the data that is available from
-% papers. 
 
 close all;
 
